@@ -75,8 +75,8 @@ public class RecipeController {
 	}
 	
 	@CrossOrigin
-	@GetMapping("recipes/favorites")
-	public ResponseEntity<?> getFavorites(@PathVariable Integer recipeId) throws ResourceNotFoundException {
+	@GetMapping("recipes/favorites/{recipeId}")
+	public ResponseEntity<?> getFavorites(@PathVariable int recipeId) throws ResourceNotFoundException {
 		Optional<Recipe> recipeOptional = repo.findById(recipeId);
 
         if (recipeOptional.isPresent()) {
