@@ -44,4 +44,12 @@ public class GlobalExceptionHandler {
 		
 		return ResponseEntity.status(400).body(errorDetails);
 	}
+	
+	@ExceptionHandler(NoUserGivenException.class)
+	public ResponseEntity<?> noUserGiven(NoUserGivenException ex, WebRequest request)
+	{
+		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
+		
+		return ResponseEntity.status(400).body(errorDetails);
+	}
 }

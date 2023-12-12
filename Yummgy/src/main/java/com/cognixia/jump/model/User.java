@@ -60,7 +60,8 @@ public class User implements Serializable{
 	public void setYumUsername(String yumUsername) {
 		this.yumUsername = yumUsername;
 	}
-
+	
+	@JsonIgnore
 	public String getYumPassword() {
 		return yumPassword;
 	}
