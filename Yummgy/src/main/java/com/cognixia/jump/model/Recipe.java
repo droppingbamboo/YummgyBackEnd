@@ -51,7 +51,7 @@ public class Recipe implements Serializable {
 	private String foodImageUrl;
 	
 	@ManyToOne
-	@JoinColumn(name = "user_id", referencedColumnName = "userId")
+	@JoinColumn(name = "author", referencedColumnName = "userId")
 	private User author;
 	
 	@OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL)
