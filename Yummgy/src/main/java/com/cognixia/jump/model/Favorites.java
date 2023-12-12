@@ -16,7 +16,7 @@ public class Favorites implements Serializable {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
+	private Integer favoritesId;
 	
 	@ManyToOne
 	@JoinColumn(name = "user_id", referencedColumnName = "userId")
@@ -32,17 +32,17 @@ public class Favorites implements Serializable {
 
 	public Favorites(Integer id, User user, Recipe recipe) {
 		super();
-		this.id = id;
+		this.favoritesId = id;
 		this.user = user;
 		this.recipe = recipe;
 	}
 
-	public Integer getId() {
-		return id;
+	public Integer getFavoritesId() {
+		return favoritesId;
 	}
 
-	public void setId(Integer id) {
-		this.id = id;
+	public void setFavoritesId(Integer favorites_id) {
+		this.favoritesId = favorites_id;
 	}
 
 	public User getUser() {
