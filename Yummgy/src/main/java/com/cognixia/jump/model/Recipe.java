@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -34,8 +36,9 @@ public class Recipe implements Serializable {
 	private String title;
 	
 	// Will be in minutes
-	@Column(nullable = false)
+	
 	@Min(0)
+	@Column(nullable = false)
 	private Integer prepTime;
 	
 	@NotBlank
