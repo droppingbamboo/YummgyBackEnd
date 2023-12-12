@@ -44,6 +44,15 @@ public class User implements Serializable{
 	public User() {
 		
 	}
+	public User(Integer userId, @NotBlank String yumUsername, @NotBlank String yumPassword, List<Recipe> recipes,
+			List<Favorites> favorites) {
+		super();
+		this.userId = userId;
+		this.yumUsername = yumUsername;
+		this.yumPassword = yumPassword;
+		this.recipes = recipes;
+		this.favorites = favorites;
+	}
 
 	public Integer getUserId() {
 		return userId;
@@ -85,6 +94,12 @@ public class User implements Serializable{
 		this.favorites = favorites;
 	}
 	
-	
+	public String toJson() {
+	    return "{\"userId\" : " + userId
+	            + ", \"yumUsername\" : \"" + yumUsername + "\""
+	            + ", \"yumPassword\" : \"" + yumPassword + "\""
+	            // Add other fields as needed...
+	            + "}";
+	}
 	
 }
