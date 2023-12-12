@@ -34,8 +34,9 @@ public class Recipe implements Serializable {
 	private String title;
 	
 	// Will be in minutes
-	@Column(nullable = false)
+	
 	@Min(0)
+	@Column(nullable = false)
 	private Integer prepTime;
 	
 	@NotBlank
