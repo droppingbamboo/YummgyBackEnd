@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
@@ -34,6 +35,7 @@ public class Recipe implements Serializable {
 	
 	// Will be in minutes
 	@Column(nullable = false)
+	@Min(0)
 	private Integer prepTime;
 	
 	@NotBlank
@@ -45,8 +47,7 @@ public class Recipe implements Serializable {
 	private String directions;
 	
 	@NotBlank
-	@Pattern(regexp = "/(https?:\\/\\/.*\\.(?:png|jpg))/i")
-	@Column(nullable = false)
+	@Column(nullable = true)
 	private String foodImageUrl;
 	
 	@ManyToOne
