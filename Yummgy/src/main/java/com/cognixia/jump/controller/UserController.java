@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cognixia.jump.exception.ResourceNotFoundException;
 import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.User;
 import com.cognixia.jump.repository.UserRepository;
@@ -39,7 +40,7 @@ public class UserController {
 	@PostMapping("/add/user")
 	public ResponseEntity<?> addUser(@RequestBody User newUser) {
 		
-		newUser.setUserId(-1);
+		newUser.setUserId(null);
 		
 		User added = repo.save(newUser); 
 		
@@ -50,7 +51,7 @@ public class UserController {
 	
 	@CrossOrigin
 	@DeleteMapping("/delete/user/{id}")
-	public ResponseEntity<?> deleteUser(@PathVariable int id) {
+	public ResponseEntity<?> deleteUser(@PathVariable int id) throws ResourceNotFoundException {
 		
 		Optional<User> found = repo.findById(id);
 		
@@ -61,22 +62,21 @@ public class UserController {
 			return ResponseEntity.status(200).body(found.get());	
 		}
 		else {
-			return ResponseEntity.status(404)
-								 .body("User with id = " + id + " not found");
+			throw new ResourceNotFoundException("User", id);
 		}
 			
 	}
 
     
     @GetMapping("/users/{userId}/favorites")
-    public ResponseEntity<?> getUserFavorites(@PathVariable Integer userId) {
+    public ResponseEntity<?> getUserFavorites(@PathVariable Integer userId) throws ResourceNotFoundException {
         Optional<User> userOptional = repo.findById(userId);
 
         if (userOptional.isPresent()) {
             List<Favorites> favorites = userOptional.get().getFavorites();
             return ResponseEntity.status(200).body(favorites);
         } else {
-            return ResponseEntity.status(404).body("User with id = " + userId + " not found");
+        	throw new ResourceNotFoundException("User", userId);
         }
     }
 	
