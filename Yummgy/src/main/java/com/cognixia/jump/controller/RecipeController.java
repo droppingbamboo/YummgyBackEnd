@@ -41,7 +41,7 @@ public class RecipeController {
 	UserRepository userRepo;
 	
 	@CrossOrigin
-	@GetMapping("/recipes")
+	@GetMapping("/recipes/search/")
 	public List<Recipe> getRecipes() {
 		
 		return repo.findAll();
@@ -57,6 +57,11 @@ public class RecipeController {
 	@CrossOrigin
 	@GetMapping("/recipes/search/{search}")
 	public List<Recipe> searchRecipeTitles(@PathVariable String search) {
+		
+		if(search.equals(""))
+		{
+			return getRecipes();
+		}
 		
 		return repo.findByTitleContaining(search);
 	}
