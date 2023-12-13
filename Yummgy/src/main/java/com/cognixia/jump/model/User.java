@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,11 +25,13 @@ public class User implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 	
+	@Schema(description="The id of a user.", example="1", required=true)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer userId;
 	
-	@NotBlank
+	@Schema(description="The username of a user", example="bomono3", required=true)
+	@NotBlank(message = "Username cannot be blank")
 	@Column(unique = true, nullable = false)
 	private String yumUsername;
 	

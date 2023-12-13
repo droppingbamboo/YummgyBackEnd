@@ -3,8 +3,10 @@ package com.cognixia.jump.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.cognixia.jump.model.Recipe;
 
@@ -17,4 +19,9 @@ public interface RecipeRepository extends JpaRepository<Recipe, Integer> {
 	public List<Recipe> latestRecipesByAmount(int numberGrabbed);
 	
 	public List<Recipe> findByTitleContaining(String search);
+	
+	@Transactional
+	@Modifying
+	@Query(value = "delete from recipe where recipe.recipe_id = ?1", nativeQuery = true)
+	public int deleteRecipe(int id);
 }

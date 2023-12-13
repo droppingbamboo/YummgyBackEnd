@@ -145,7 +145,7 @@ public class RecipeController {
 		}
 		if(found.isPresent()) {
 			
-			repo.deleteById(id);
+			repo.deleteRecipe(id);
 			
 			return ResponseEntity.status(200).body(found.get());	
 		}
