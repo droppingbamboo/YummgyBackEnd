@@ -103,14 +103,14 @@ public class UserController {
 	
 	@CrossOrigin
 	@GetMapping("/users/{userId}/recipes")
-	public ResponseEntity<?> getUserRecipes(@PathVariable int id) throws ResourceNotFoundException {
-		Optional<User> userOptional = repo.findById(id);
+	public ResponseEntity<?> getUserRecipes(@PathVariable Integer userId) throws ResourceNotFoundException {
+		Optional<User> userOptional = repo.findById(userId);
 
         if (userOptional.isPresent()) {
             List<Recipe> recipes = userOptional.get().getRecipes();
             return ResponseEntity.status(200).body(recipes);
         } else {
-        	throw new ResourceNotFoundException("User", id);
+        	throw new ResourceNotFoundException("User", userId);
         }
 	}
     
