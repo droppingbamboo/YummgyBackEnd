@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,28 +31,33 @@ public class Recipe implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
+	@Schema(description="The id of a recipe.", example="1", required=true, nullable=false)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer recipeId;
 	
+	@Schema(description="The title of the recipe", example="Cheese Sandwich", required=true, nullable=false)
 	@NotBlank
 	@Column(nullable = false)
 	private String title;
 	
 	// Will be in minutes
-	
+	@Schema(description="The prep and cook time of the meal in minutes", example="45", required=true, nullable=false, minimum="0")
 	@Min(0)
 	@Column(nullable = false)
 	private Integer prepTime;
 	
+	@Schema(description="The ingredients of the recipe", example="1. Bread \n 2. Cheese", required=true, nullable=false)
 	@NotBlank
 	@Column(nullable = false)
 	private String ingredients;
 	
+	@Schema(description="Directions on how to make the recipe", example="Put cheese firmly between the two slices of bread.", required=true, nullable=false)
 	@NotBlank
 	@Column(nullable = false)
 	private String directions;
 	
+	@Schema(description="Url image of the food", example="https://images.thdstatic.com/productImages/db0c889a-9c85-4009-9b6c-9d48db92f759/svn/fingerprint-resistant-stainless-steel-vissani-countertop-microwaves-vscmwe16s2sw-11-a0_600.jpg")
 	@Column(nullable = true)
 	private String foodImageUrl;
 	
