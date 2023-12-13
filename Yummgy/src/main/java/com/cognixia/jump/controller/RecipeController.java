@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,8 +24,10 @@ import com.cognixia.jump.exception.UrlNotAnImageException;
 import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.Recipe;
 import com.cognixia.jump.model.User;
+import com.cognixia.jump.repository.FavoritesRepository;
 import com.cognixia.jump.repository.RecipeRepository;
 import com.cognixia.jump.repository.UserRepository;
+import com.cognixia.jump.util.JwtUtil;
 
 import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
@@ -39,6 +42,13 @@ public class RecipeController {
 	
 	@Autowired
 	UserRepository userRepo;
+	
+	@Autowired
+	FavoritesRepository favoritesRepo;
+	
+	@Autowired
+	JwtUtil jwtUtil;
+	
 	
 	@CrossOrigin
 	@GetMapping("/recipes/search/")
@@ -92,16 +102,13 @@ public class RecipeController {
         }
 	}
 	
-	
-	
-	// Need to use JWT to grab user and create user object to avoid the frontend having to provide user information they don't have.
 	@CrossOrigin
 	@PostMapping("/add/recipe")
-	public ResponseEntity<?> addRecipe(@Valid @RequestBody Recipe newRecipe) throws NoUserGivenException, ResourceNotFoundException, UrlNotAnImageException {
+	public ResponseEntity<?> addRecipe(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe newRecipe) throws NoUserGivenException, ResourceNotFoundException, UrlNotAnImageException {
 		
 		newRecipe.setRecipeId(null);
 		
-		
+		newRecipe.setAuthor(jwtUtil.getLoggedInUser(token));
 		
 		if(newRecipe.getAuthor() == null)
 		{
@@ -116,7 +123,7 @@ public class RecipeController {
 		{
 			throw new ResourceNotFoundException("user", newRecipe.getAuthor().getUserId());
 		}
-		else if(!match.find())
+		else if(!match.find() && ((newRecipe.getFoodImageUrl() != null) && (newRecipe.getFoodImageUrl() != "")))
 		{
 			throw new UrlNotAnImageException(newRecipe.getFoodImageUrl());
 		}
@@ -128,10 +135,14 @@ public class RecipeController {
 	
 	@CrossOrigin
 	@DeleteMapping("/delete/recipe/{id}")
-	public ResponseEntity<?> deleteRecipe(@PathVariable int id) throws ResourceNotFoundException {
+	public ResponseEntity<?> deleteRecipe(@RequestHeader (name="Authorization") String token, @PathVariable int id) throws ResourceNotFoundException {
 		
 		Optional<Recipe> found = repo.findById(id);
 		
+		if(!jwtUtil.getLoggedInUser(token).getRecipes().contains(found.get()))
+		{
+			return ResponseEntity.status(404).body("recipe not yours");
+		}
 		if(found.isPresent()) {
 			
 			repo.deleteById(id);
@@ -145,11 +156,18 @@ public class RecipeController {
 	}
 	
 	@CrossOrigin
-	@PatchMapping("/patch/recipe/{id}")
-	public ResponseEntity<?> updateRecipe(@PathParam(value="recipeId") int id, @PathParam(value="title") String title,
+	@PatchMapping("/patch/recipe/")
+	public ResponseEntity<?> updateRecipe(@RequestHeader (name="Authorization") String token, @PathParam(value="recipeId") int id, @PathParam(value="title") String title,
 			 @PathParam(value="prep_time") int prepTime, @PathParam(value="ingredients") String ingredients,
 			 @PathParam(value="directions") String directions, @PathParam(value="food_image_url") String url) throws ResourceNotFoundException {
+		
+		
 		Optional<Recipe> found = repo.findById(id);
+		
+		if(!jwtUtil.getLoggedInUser(token).getRecipes().contains(found.get()))
+		{
+			return ResponseEntity.status(404).body("recipe not yours");
+		}
 		
 		if(found.isEmpty()) {
 			throw new ResourceNotFoundException("recipe", id);
@@ -167,5 +185,51 @@ public class RecipeController {
 		return ResponseEntity.status(200).body(updated);
 	}
 	
+	@CrossOrigin
+	@DeleteMapping("/add/recipe/favorite/{id}")
+	public ResponseEntity<?> unfavoriteRecipie(@RequestHeader (name="Authorization") String token, @PathVariable int id) throws ResourceNotFoundException {
+		Optional<Recipe> found = repo.findById(id);
+		if(found.isPresent()) {
+			Favorites fav = new Favorites(null, jwtUtil.getLoggedInUser(token), found.get());
+			if(found.get().getFavorites().contains(fav))
+			{
+				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
+				System.out.println(deleteItem);
+				favoritesRepo.deleteById(deleteItem.getFavoritesId());
+				return ResponseEntity.status(200).body("Unfavorited");
+			}
+			else
+			{
+				return ResponseEntity.status(400).body("Not your favorite");
+			}
+		}
+		else {
+			throw new ResourceNotFoundException("Recipe", id);
+		}
+		
+	}
+	
+	// Adds and removes favorites depending on if the user has already favorited it.
+	@CrossOrigin
+	@PostMapping("/add/recipe/favorite/{id}")
+	public ResponseEntity<?> favoriteRecipie(@RequestHeader (name="Authorization") String token, @PathVariable int id) throws ResourceNotFoundException {
+		Optional<Recipe> found = repo.findById(id);
+		if(found.isPresent()) {
+			Favorites fav = new Favorites(null, jwtUtil.getLoggedInUser(token), found.get());
+			if(found.get().getFavorites().contains(fav))
+			{
+				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
+				System.out.println(deleteItem);
+				favoritesRepo.deleteById(deleteItem.getFavoritesId());
+				return ResponseEntity.status(200).body("Unfavorited");
+			}
+			favoritesRepo.save(fav);
+			return ResponseEntity.status(200).body(fav);
+		}
+		else {
+			throw new ResourceNotFoundException("Recipe", id);
+		}
+		
+	}
 	
 }
