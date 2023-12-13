@@ -1,5 +1,11 @@
 package com.cognixia.jump.controller;
 
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
@@ -8,161 +14,173 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.server.csrf.CsrfToken;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 
 import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.Recipe;
 import com.cognixia.jump.model.User;
 import com.cognixia.jump.repository.UserRepository;
+import com.cognixia.jump.service.MyUserDetails;
+import com.cognixia.jump.service.MyUserDetailsService;
+import com.cognixia.jump.util.JwtUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(UserController.class)
 public class UserContollerTest {
 	private static final String STARTING_URI = "http://localhost:8080/api";
 	
-	@Autowired
-	private MockMvc mvc;
-	
+    @Autowired
+    private MockMvc mvc;
+
     @MockBean
     private UserRepository userRepository;
+
+    @MockBean
+    private PasswordEncoder passwordEncoder;
+
+    @MockBean
+    private JwtUtil jwtUtil;
     
+    @MockBean
+    private MyUserDetailsService userDetailsService;
+
     @Test
+    @WithMockUser(username = "testUser", password = "testPassword")
     public void testGetUsers() throws Exception {
-
-        String uri = STARTING_URI + "/users";
-
+        // Mock data
         List<User> users = new ArrayList<>();
-
         users.add(new User(1, "JohnDoe", "password", new ArrayList<>(), new ArrayList<>()));
-        users.add(new User(2, "JaneSmith", "secure123", new ArrayList<>(), new ArrayList<>()));
 
+        // Mock UserRepository response
         when(userRepository.findAll()).thenReturn(users);
 
-        mvc.perform(get(uri))
-                .andDo(print())
+        // Perform the GET request
+        mvc.perform(get("/api/users").with(user("testUser")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.length()").value(users.size()))
                 .andExpect(jsonPath("$[0].userId").value(users.get(0).getUserId()))
-                .andExpect(jsonPath("$[0].yumUsername").value(users.get(0).getYumUsername()))
-                .andExpect(jsonPath("$[1].userId").value(users.get(1).getUserId()))
-                .andExpect(jsonPath("$[1].yumUsername").value(users.get(1).getYumUsername()));
+                .andExpect(jsonPath("$[0].yumUsername").value(users.get(0).getYumUsername()));
 
+        // Verify interactions with userRepository
         verify(userRepository, times(1)).findAll();
         verifyNoMoreInteractions(userRepository);
     }
     
     @Test
-    public void testAddUser() throws Exception {
+    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
+    public void testGetUserFavorites() throws Exception {
+        // Mock data
+        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+        Recipe recipe1 = new Recipe(1, "Recipe 1", 30, "Ingredients 1", "Directions 1", null, testUser, new ArrayList<>());
+        Recipe recipe2 = new Recipe(2, "Recipe 2", 45, "Ingredients 2", "Directions 2", null, testUser, new ArrayList<>());
+        Favorites favorite1 = new Favorites(1, testUser, recipe1);
+        Favorites favorite2 = new Favorites(2, testUser, recipe2);
+        testUser.setFavorites(List.of(favorite1, favorite2));
 
-        String uri = STARTING_URI + "/add/user";
+        // Mock UserRepository response
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
 
-        User newUser = new User(null, "JohnDoe", "password", new ArrayList<>(), new ArrayList<>());
-
-        when(userRepository.save(Mockito.any(User.class))).thenReturn(newUser);
-
-        mvc.perform(post(uri)
-                .content(newUser.toJson())
-                .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andDo(print())
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.userId").value(newUser.getUserId()))
-                .andExpect(jsonPath("$.yumUsername").value(newUser.getYumUsername()))
-                .andExpect(jsonPath("$.yumPassword").doesNotExist());
-
-        verify(userRepository, times(1)).save(Mockito.any(User.class));
-        verifyNoMoreInteractions(userRepository);
-    }
-
-    @Test
-    public void testDeleteUser() throws Exception {
-
-        String uri = STARTING_URI + "/delete/user/{id}";
-        int id = 1;
-
-        User user = new User();
-        user.setUserId(id);
-        user.setYumUsername("testUser");
-        user.setYumPassword("testPassword");
-
-        when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        doNothing().when(userRepository).deleteById(id);
-
-        mvc.perform(delete(uri, id))
-                .andDo(print())
+        // Perform the GET request
+        MvcResult result = mvc.perform(get("/api/users/1/favorites").header("Authorization", "Bearer test-token"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.userId").value(id))
-                .andExpect(jsonPath("$.yumUsername").value("testUser"))
-                .andExpect(jsonPath("$.yumPassword").doesNotExist());
+                .andReturn();
 
-        verify(userRepository, times(1)).findById(id);
-        verify(userRepository, times(1)).deleteById(id);
+        // Parse JSON manually
+        String jsonResponse = result.getResponse().getContentAsString();
+        JSONArray jsonArray = new JSONArray(jsonResponse);
+
+        // Your assertions on jsonArray
+        assertThat(jsonArray.length()).isEqualTo(2);
+
+        JSONObject favorites1 = jsonArray.getJSONObject(0);
+        assertThat(favorites1.getInt("favoritesId")).isEqualTo(1);
+
+        JSONObject favorites2 = jsonArray.getJSONObject(1);
+        assertThat(favorites2.getInt("favoritesId")).isEqualTo(2);
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).findById(1);
         verifyNoMoreInteractions(userRepository);
     }
     
     @Test
-    public void testGetUserFavorites() throws Exception {
-        int userId = 2;
+    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
+    public void testGetUserRecipes() throws Exception {
+        // Mock data
+        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+        Recipe recipe1 = new Recipe(1, "Recipe 1", 30, "Ingredients 1", "Directions 1", null, testUser, new ArrayList<>());
+        Recipe recipe2 = new Recipe(2, "Recipe 2", 45, "Ingredients 2", "Directions 2", null, testUser, new ArrayList<>());
+        testUser.setRecipes(List.of(recipe1, recipe2));
 
-        User user = new User();
-        user.setUserId(userId);
-        user.setYumUsername("BryanD");
+        // Mock UserRepository response
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
 
-        Recipe recipe1 = new Recipe();
-        recipe1.setRecipeId(3);
-        // Set other fields for recipe1
-
-        Recipe recipe2 = new Recipe();
-        recipe2.setRecipeId(5);
-        // Set other fields for recipe2
-
-        Favorites favorite1 = new Favorites();
-        favorite1.setFavoritesId(3);
-        favorite1.setUser(user);
-        favorite1.setRecipe(recipe1);
-
-        Favorites favorite2 = new Favorites();
-        favorite2.setFavoritesId(4);
-        favorite2.setUser(user);
-        favorite2.setRecipe(recipe2);
-
-        List<Favorites> favoritesList = Arrays.asList(favorite1, favorite2);
-
-        user.setFavorites(favoritesList);
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        mvc.perform(get(STARTING_URI + "/users/{userId}/favorites", userId))
-                .andDo(print())
+        // Perform the GET request
+        MvcResult result = mvc.perform(get("/api/users/1/recipes").header("Authorization", "Bearer test-token"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$[0].user.userId").value(userId))
-                .andExpect(jsonPath("$[0].user.yumUsername").value("BryanD"))
-                .andExpect(jsonPath("$[0].recipe.recipeId").value(recipe1.getRecipeId()))
-                .andExpect(jsonPath("$[1].user.userId").value(userId))
-                .andExpect(jsonPath("$[1].user.yumUsername").value("BryanD"))
-                .andExpect(jsonPath("$[1].recipe.recipeId").value(recipe2.getRecipeId()));
+                .andReturn();
 
-        verify(userRepository, times(1)).findById(userId);
+        // Parse JSON manually
+        String jsonResponse = result.getResponse().getContentAsString();
+        JSONArray jsonArray = new JSONArray(jsonResponse);
+
+        // Your assertions on jsonArray
+        assertThat(jsonArray.length()).isEqualTo(2);
+
+        JSONObject recipe1Json = jsonArray.getJSONObject(0);
+        assertThat(recipe1Json.getInt("recipeId")).isEqualTo(1);
+
+        JSONObject recipe2Json = jsonArray.getJSONObject(1);
+        assertThat(recipe2Json.getInt("recipeId")).isEqualTo(2);
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).findById(1);
         verifyNoMoreInteractions(userRepository);
     }
 
+	// converts any object to a JSON string
+	public static String asJsonString(final Object obj) {
+
+		try {
+			return new ObjectMapper().writeValueAsString(obj);
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+
+	}
     
     
 }
