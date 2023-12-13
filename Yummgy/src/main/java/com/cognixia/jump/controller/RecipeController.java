@@ -58,6 +58,11 @@ public class RecipeController {
 	@GetMapping("/recipes/search/{search}")
 	public List<Recipe> searchRecipeTitles(@PathVariable String search) {
 		
+		if(search.equals("") || (search == null))
+		{
+			return getRecipes();
+		}
+		
 		return repo.findByTitleContaining(search);
 	}
 	
