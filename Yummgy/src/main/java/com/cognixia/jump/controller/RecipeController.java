@@ -156,31 +156,22 @@ public class RecipeController {
 	}
 	
 	@CrossOrigin
-	@PatchMapping("/patch/recipe/")
-	public ResponseEntity<?> updateRecipe(@RequestHeader (name="Authorization") String token, @PathParam(value="recipeId") int id, @PathParam(value="title") String title,
-			 @PathParam(value="prep_time") int prepTime, @PathParam(value="ingredients") String ingredients,
-			 @PathParam(value="directions") String directions, @PathParam(value="food_image_url") String url) throws ResourceNotFoundException {
+	@PatchMapping("/patch/recipe")
+	public ResponseEntity<?> updateRecipe(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe recipe) throws ResourceNotFoundException {
 		
+		Optional<Recipe> found = repo.findById(recipe.getRecipeId());
 		
-		Optional<Recipe> found = repo.findById(id);
-		
+		if(found.isEmpty()) {
+			throw new ResourceNotFoundException("recipe", recipe.getRecipeId());
+		}
 		if(!jwtUtil.getLoggedInUser(token).getRecipes().contains(found.get()))
 		{
 			return ResponseEntity.status(404).body("recipe not yours");
 		}
+		recipe.setFavorites(found.get().getFavorites());
+		recipe.setAuthor(found.get().getAuthor());
 		
-		if(found.isEmpty()) {
-			throw new ResourceNotFoundException("recipe", id);
-		}
-		
-		Recipe recipeToUpdate = found.get();
-		
-		recipeToUpdate.setTitle(title);
-		recipeToUpdate.setPrepTime(prepTime);
-		recipeToUpdate.setIngredients(ingredients);
-		recipeToUpdate.setDirections(directions);
-		recipeToUpdate.setFoodImageUrl(url);
-		Recipe updated = repo.save(recipeToUpdate);
+		Recipe updated = repo.save(recipe);
 		
 		return ResponseEntity.status(200).body(updated);
 	}
