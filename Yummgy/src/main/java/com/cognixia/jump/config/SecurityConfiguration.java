@@ -31,12 +31,29 @@ public class SecurityConfiguration {
 		return userDetailsService;
 	}
 	
+	private static final String[] AUTH_WHITE_LIST = {
+			"/api/v1/auth/**",
+			"/v2/api-docs",
+            "/v3/api-docs",
+			"/v2/api-docs/**",
+			"/v3/api-docs/**",
+			"/swagger-resources",
+            "/swagger-resources/**",
+            "/configuration/ui",
+            "/configuration/security",
+            "/swagger-ui/index.html",
+            "/swagger-ui/**",
+            "/webjars/**",
+            "/swagger-ui.html"
+    };
+	
 	@SuppressWarnings({ "removal" })
 	@Bean
 	protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		
 		http.csrf().disable()
         .authorizeHttpRequests()
+        .requestMatchers(AUTH_WHITE_LIST).permitAll()
         .requestMatchers(HttpMethod.POST,"/api/add/user").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/search/**").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/latest/**").permitAll()
