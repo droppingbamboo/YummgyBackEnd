@@ -66,6 +66,21 @@ public class Recipe implements Serializable {
 	public Recipe() {
 		
 	}
+	
+
+	public Recipe(Integer recipeId, @NotBlank String title, @Min(0) Integer prepTime, @NotBlank String ingredients,
+			@NotBlank String directions, @NotBlank String foodImageUrl, User author, List<Favorites> favorites) {
+		super();
+		this.recipeId = recipeId;
+		this.title = title;
+		this.prepTime = prepTime;
+		this.ingredients = ingredients;
+		this.directions = directions;
+		this.foodImageUrl = foodImageUrl;
+		this.author = author;
+		this.favorites = favorites;
+	}
+
 
 	public Integer getRecipeId() {
 		return recipeId;
