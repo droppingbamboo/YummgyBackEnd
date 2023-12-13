@@ -2,6 +2,7 @@ package com.cognixia.jump.model;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -51,7 +52,6 @@ public class Recipe implements Serializable {
 	@Column(nullable = false)
 	private String directions;
 	
-	@NotBlank
 	@Column(nullable = true)
 	private String foodImageUrl;
 	
@@ -66,7 +66,17 @@ public class Recipe implements Serializable {
 	public Recipe() {
 		
 	}
-	
+
+	public Recipe(@NotBlank String title, @Min(0) Integer prepTime, @NotBlank String ingredients,
+			@NotBlank String directions, @NotBlank String foodImageUrl) {
+		super();
+		this.recipeId = null;
+		this.title = title;
+		this.prepTime = prepTime;
+		this.ingredients = ingredients;
+		this.directions = directions;
+		this.foodImageUrl = foodImageUrl;
+	}
 
 	public Recipe(Integer recipeId, @NotBlank String title, @Min(0) Integer prepTime, @NotBlank String ingredients,
 			@NotBlank String directions, @NotBlank String foodImageUrl, User author, List<Favorites> favorites) {
@@ -145,6 +155,34 @@ public class Recipe implements Serializable {
 	public void setFavorites(List<Favorites> favorites) {
 		this.favorites = favorites;
 	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(author, directions, favorites, foodImageUrl, ingredients, prepTime, recipeId, title);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Recipe other = (Recipe) obj;
+		return Objects.equals(author, other.author) && Objects.equals(directions, other.directions)
+				&& Objects.equals(favorites, other.favorites) && Objects.equals(foodImageUrl, other.foodImageUrl)
+				&& Objects.equals(ingredients, other.ingredients) && Objects.equals(prepTime, other.prepTime)
+				&& Objects.equals(recipeId, other.recipeId) && Objects.equals(title, other.title);
+	}
+
+	@Override
+	public String toString() {
+		return "Recipe [recipeId=" + recipeId + ", title=" + title + ", prepTime=" + prepTime + ", ingredients="
+				+ ingredients + ", directions=" + directions + ", foodImageUrl=" + foodImageUrl
+				+ "]";
+	}
+	
 	
 	
 }
