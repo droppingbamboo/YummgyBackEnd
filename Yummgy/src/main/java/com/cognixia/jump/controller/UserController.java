@@ -127,4 +127,9 @@ public class UserController {
         }
     }
 	
+	@CrossOrigin
+	@GetMapping("/users/loggedin")
+	public ResponseEntity<?> getLoggedInUser(@RequestHeader (name="Authorization") String token) {
+		return ResponseEntity.status(200).body(jwtUtil.getLoggedInUser(token));
+	}
 }
