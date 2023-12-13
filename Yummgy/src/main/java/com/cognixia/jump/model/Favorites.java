@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,10 +20,12 @@ public class Favorites implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 	
+	@Schema(description="The id of a user's favorites", example="1", required=true, nullable=false)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer favoritesId;
 	
+	@Schema(description="", example="1", required=true, nullable=false)
 	@ManyToOne
 	@JoinColumn(name = "user_id", referencedColumnName = "userId")
 	private User user;

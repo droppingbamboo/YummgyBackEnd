@@ -25,16 +25,17 @@ public class User implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
 	
-	@Schema(description="The id of a user.", example="1", required=true)
+	@Schema(description="The id of a user.", example="1", required=true, nullable=false)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer userId;
 	
-	@Schema(description="The username of a user", example="bomono3", required=true)
+	@Schema(description="The username of a user", example="bomono3", required=true, nullable=false)
 	@NotBlank(message = "Username cannot be blank")
 	@Column(unique = true, nullable = false)
 	private String yumUsername;
 	
+	@Schema(description="The password of a user, which is stored in an encrypted manner.", example="342fdfsdf$T@fegg6$", required=true, nullable=false)
 	@NotBlank
 	@Column(nullable = false)
 	private String yumPassword;
