@@ -2,6 +2,7 @@ package com.cognixia.jump.model;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -104,5 +105,26 @@ public class User implements Serializable{
 	            // Add other fields as needed...
 	            + "}";
 	}
+	@Override
+	public String toString() {
+		return "User [userId=" + userId + ", yumUsername=" + yumUsername + ", yumPassword=" + yumPassword + "]";
+	}
+	@Override
+	public int hashCode() {
+		return Objects.hash(yumUsername);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		User other = (User) obj;
+		return Objects.equals(yumUsername, other.yumUsername);
+	}
+	
+	
 	
 }

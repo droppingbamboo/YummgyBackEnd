@@ -1,6 +1,7 @@
 package com.cognixia.jump.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -63,6 +64,28 @@ public class Favorites implements Serializable {
 
 	public void setRecipe(Recipe recipe) {
 		this.recipe = recipe;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(recipe, user);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Favorites other = (Favorites) obj;
+		return Objects.equals(recipe, other.recipe) && Objects.equals(user, other.user);
+	}
+
+	@Override
+	public String toString() {
+		return "Favorites [favoritesId=" + favoritesId + ", user=" + user + ", recipe=" + recipe + "]";
 	}
 	
 	
