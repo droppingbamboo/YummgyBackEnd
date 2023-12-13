@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -56,12 +58,12 @@ public class User implements Serializable{
 	public String getYumUsername() {
 		return yumUsername;
 	}
-
+	
 	public void setYumUsername(String yumUsername) {
 		this.yumUsername = yumUsername;
 	}
 	
-	@JsonIgnore
+	@JsonProperty(access = Access.WRITE_ONLY)
 	public String getYumPassword() {
 		return yumPassword;
 	}

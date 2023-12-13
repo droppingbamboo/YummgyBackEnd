@@ -19,6 +19,8 @@ import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.User;
 import com.cognixia.jump.repository.UserRepository;
 
+import jakarta.validation.Valid;
+
 @CrossOrigin
 @RequestMapping("/api")
 @RestController
@@ -38,7 +40,7 @@ public class UserController {
 	
 	@CrossOrigin
 	@PostMapping("/add/user")
-	public ResponseEntity<?> addUser(@RequestBody User newUser) {
+	public ResponseEntity<?> addUser(@Valid @RequestBody User newUser) {
 		
 		newUser.setUserId(null);
 		
