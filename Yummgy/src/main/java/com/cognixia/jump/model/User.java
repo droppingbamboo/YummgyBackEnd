@@ -40,7 +40,7 @@ public class User implements Serializable{
 	@JsonIgnore
 	private List<Recipe> recipes;
 	
-	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonIgnore
 	private List<Favorites> favorites;
 	
