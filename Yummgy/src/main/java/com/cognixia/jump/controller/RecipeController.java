@@ -194,13 +194,12 @@ public class RecipeController {
 			if(found.get().getFavorites().contains(fav))
 			{
 				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
-				System.out.println(deleteItem);
-				favoritesRepo.deleteById(deleteItem.getFavoritesId());
+				favoritesRepo.deleteFavorite(deleteItem.getFavoritesId());
 				return ResponseEntity.status(200).body("Unfavorited");
 			}
 			else
 			{
-				return ResponseEntity.status(400).body("Not your favorite");
+				return ResponseEntity.status(400).body("You have not favorited this, or not your favorite");
 			}
 		}
 		else {
@@ -219,7 +218,6 @@ public class RecipeController {
 			if(found.get().getFavorites().contains(fav))
 			{
 				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
-				System.out.println(deleteItem);
 				favoritesRepo.deleteById(deleteItem.getFavoritesId());
 				return ResponseEntity.status(200).body("Unfavorited");
 			}

@@ -88,6 +88,4 @@ public class Favorites implements Serializable {
 		return "Favorites [favoritesId=" + favoritesId + ", user=" + user + ", recipe=" + recipe + "]";
 	}
 	
-	
-	
 }

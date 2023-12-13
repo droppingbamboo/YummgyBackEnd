@@ -59,7 +59,7 @@ public class Recipe implements Serializable {
 	@JoinColumn(name = "author", referencedColumnName = "userId")
 	private User author;
 	
-	@OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonIgnore
 	private List<Favorites> favorites;
 	
