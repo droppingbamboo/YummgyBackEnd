@@ -59,11 +59,8 @@ public class UserContollerTest {
                 .andExpect(jsonPath("$.length()").value(users.size()))
                 .andExpect(jsonPath("$[0].userId").value(users.get(0).getUserId()))
                 .andExpect(jsonPath("$[0].yumUsername").value(users.get(0).getYumUsername()))
-                .andExpect(jsonPath("$[0].yumPassword").value(users.get(0).getYumPassword()))
-                // Add assertions for other fields as needed
                 .andExpect(jsonPath("$[1].userId").value(users.get(1).getUserId()))
-                .andExpect(jsonPath("$[1].yumUsername").value(users.get(1).getYumUsername()))
-                .andExpect(jsonPath("$[1].yumPassword").value(users.get(1).getYumPassword()));
+                .andExpect(jsonPath("$[1].yumUsername").value(users.get(1).getYumUsername()));
 
         verify(userRepository, times(1)).findAll();
         verifyNoMoreInteractions(userRepository);
@@ -86,12 +83,12 @@ public class UserContollerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.userId").value(newUser.getUserId()))
                 .andExpect(jsonPath("$.yumUsername").value(newUser.getYumUsername()))
-                .andExpect(jsonPath("$.yumPassword").value(newUser.getYumPassword()));
+                .andExpect(jsonPath("$.yumPassword").doesNotExist());
 
         verify(userRepository, times(1)).save(Mockito.any(User.class));
         verifyNoMoreInteractions(userRepository);
     }
-    
+
     @Test
     public void testDeleteUser() throws Exception {
 
@@ -104,7 +101,6 @@ public class UserContollerTest {
         user.setYumPassword("testPassword");
 
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
-        // Mock the repository deleteById method
         doNothing().when(userRepository).deleteById(id);
 
         mvc.perform(delete(uri, id))
@@ -113,13 +109,59 @@ public class UserContollerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.userId").value(id))
                 .andExpect(jsonPath("$.yumUsername").value("testUser"))
-                .andExpect(jsonPath("$.yumPassword").value("testPassword"));
+                .andExpect(jsonPath("$.yumPassword").doesNotExist());
 
         verify(userRepository, times(1)).findById(id);
         verify(userRepository, times(1)).deleteById(id);
         verifyNoMoreInteractions(userRepository);
     }
     
+    @Test
+    public void testGetUserFavorites() throws Exception {
+        int userId = 2;
+
+        User user = new User();
+        user.setUserId(userId);
+        user.setYumUsername("BryanD");
+
+        Recipe recipe1 = new Recipe();
+        recipe1.setRecipeId(3);
+        // Set other fields for recipe1
+
+        Recipe recipe2 = new Recipe();
+        recipe2.setRecipeId(5);
+        // Set other fields for recipe2
+
+        Favorites favorite1 = new Favorites();
+        favorite1.setFavoritesId(3);
+        favorite1.setUser(user);
+        favorite1.setRecipe(recipe1);
+
+        Favorites favorite2 = new Favorites();
+        favorite2.setFavoritesId(4);
+        favorite2.setUser(user);
+        favorite2.setRecipe(recipe2);
+
+        List<Favorites> favoritesList = Arrays.asList(favorite1, favorite2);
+
+        user.setFavorites(favoritesList);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        mvc.perform(get(STARTING_URI + "/users/{userId}/favorites", userId))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$[0].user.userId").value(userId))
+                .andExpect(jsonPath("$[0].user.yumUsername").value("BryanD"))
+                .andExpect(jsonPath("$[0].recipe.recipeId").value(recipe1.getRecipeId()))
+                .andExpect(jsonPath("$[1].user.userId").value(userId))
+                .andExpect(jsonPath("$[1].user.yumUsername").value("BryanD"))
+                .andExpect(jsonPath("$[1].recipe.recipeId").value(recipe2.getRecipeId()));
+
+        verify(userRepository, times(1)).findById(userId);
+        verifyNoMoreInteractions(userRepository);
+    }
 
     
     
