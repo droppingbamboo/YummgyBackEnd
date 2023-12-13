@@ -38,6 +38,8 @@ public class SecurityConfiguration {
 		http.csrf().disable()
         .authorizeHttpRequests()
         .requestMatchers(HttpMethod.POST,"/api/add/user").permitAll()
+        .requestMatchers(HttpMethod.GET,"/api/recipes/search/**").permitAll()
+        .requestMatchers(HttpMethod.GET,"/api/recipes/latest/**").permitAll()
         .requestMatchers("/authenticate").permitAll()
         .anyRequest().authenticated()
         .and()
