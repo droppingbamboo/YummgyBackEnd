@@ -2,10 +2,12 @@ package com.cognixia.jump.exception;
 
 import java.util.Date;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
@@ -13,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 public class GlobalExceptionHandler {
 	
 	@ExceptionHandler(MethodArgumentNotValidException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<?> menthodArguementNotValid(MethodArgumentNotValidException ex, WebRequest request)
 	{
 		// The following will find all the error messages that were found when validating the fields in the request and formatting our message so it can be passed
@@ -30,6 +33,7 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(ResourceNotFoundException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public ResponseEntity<?> resourceNotFound(ResourceNotFoundException ex, WebRequest request)
 	{
 		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
@@ -38,6 +42,7 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(UrlNotAnImageException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<?> urlNotAnImage(UrlNotAnImageException ex, WebRequest request)
 	{
 		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
@@ -46,6 +51,7 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(NoUserGivenException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ResponseEntity<?> noUserGiven(NoUserGivenException ex, WebRequest request)
 	{
 		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));

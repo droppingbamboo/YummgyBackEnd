@@ -29,12 +29,17 @@ import com.cognixia.jump.repository.RecipeRepository;
 import com.cognixia.jump.repository.UserRepository;
 import com.cognixia.jump.util.JwtUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.websocket.server.PathParam;
 
 @CrossOrigin
 @RequestMapping("/api")
 @RestController
+@Tag(name = "Recipe-API", description = "The api for managing recipes and recipe favorites.")
 public class RecipeController {
 	
 	@Autowired
@@ -49,7 +54,13 @@ public class RecipeController {
 	@Autowired
 	JwtUtil jwtUtil;
 	
-	
+	@Operation(summary = "Get all the recipes in the recipe table",
+			description = "Gets all the recipes from the recipe table in the yummgy_db database."
+					+ " Only meant to be called in the case that a user searched for nothing in the search bar.")
+	@ApiResponses(
+			@ApiResponse(responseCode="200",
+			description="Recipes have been found")
+	)
 	@CrossOrigin
 	@GetMapping("/recipes/search/")
 	public List<Recipe> getRecipes() {
@@ -57,6 +68,15 @@ public class RecipeController {
 		return repo.findAll();
 	}
 	
+	@Operation(summary = "Get latest x number of recipes recipes",
+			description = "Gets the latest x recipes from the database, with x being the amount provided in the url.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="x number of latest recipes have been returned"),
+			@ApiResponse(responseCode="403",
+			description="Amount provided is not acceptable"),
+		}
+	)
 	@CrossOrigin
 	@GetMapping("/recipes/latest/{amount}")
 	public List<Recipe> getLatestRecipesByAmount(@PathVariable int amount) {
@@ -64,6 +84,13 @@ public class RecipeController {
 		return repo.latestRecipesByAmount(amount);
 	}
 	
+	@Operation(summary = "Search for recipes according to the string provided",
+			description = "Grab all recipes fitting the search criteria provided.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Search results returned")
+		}
+	)
 	@CrossOrigin
 	@GetMapping("/recipes/search/{search}")
 	public List<Recipe> searchRecipeTitles(@PathVariable String search) {
@@ -76,6 +103,15 @@ public class RecipeController {
 		return repo.findByTitleContaining(search);
 	}
 	
+	@Operation(summary = "Get a single recipe by id",
+			description = "Gets a single recipe by the id provided.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="recipe returned"),
+			@ApiResponse(responseCode="400",
+			description="Id does not correspond to a recipe")
+		}
+	)
 	@CrossOrigin
 	@GetMapping("/recipes/{id}")
 	public ResponseEntity<?> getSingleRecipe(@PathVariable int id) throws ResourceNotFoundException {
@@ -89,6 +125,15 @@ public class RecipeController {
 		return ResponseEntity.status(200).body( found.get() );
 	}
 	
+	@Operation(summary = "Get all of a recipes favorites",
+			description = "Gets a single recipes favorites.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="favorites returned"),
+			@ApiResponse(responseCode="400",
+			description="Id does not correspond to a recipe")
+		}
+	)
 	@CrossOrigin
 	@GetMapping("recipes/favorites/{recipeId}")
 	public ResponseEntity<?> getFavorites(@PathVariable int recipeId) throws ResourceNotFoundException {
@@ -98,10 +143,19 @@ public class RecipeController {
             List<Favorites> favorites = recipeOptional.get().getFavorites();
             return ResponseEntity.status(200).body(favorites);
         } else {
-        	throw new ResourceNotFoundException("User", recipeId);
+        	throw new ResourceNotFoundException("Recipe", recipeId);
         }
 	}
 	
+	@Operation(summary = "Add a recipe",
+			description = "Adds in a recipe provided in the body, under the authorship of the user if not specified otherwise.")
+	@ApiResponses({
+			@ApiResponse(responseCode="201",
+			description="Recipe added"),
+			@ApiResponse(responseCode="400",
+			description="Logged in user invalid, Url is not an image, or provided user for author does not exist.")
+		}
+	)
 	@CrossOrigin
 	@PostMapping("/add/recipe")
 	public ResponseEntity<?> addRecipe(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe newRecipe) throws NoUserGivenException, ResourceNotFoundException, UrlNotAnImageException {
@@ -133,6 +187,17 @@ public class RecipeController {
 		return ResponseEntity.status(201).body(added);
 	}
 	
+	@Operation(summary = "Delete a recipe",
+			description = "Deletes a recipe so long as that recipe is under the ownership of the logged in user.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Recipe deleted"),
+			@ApiResponse(responseCode="400",
+			description="Id does not correspond to a recipe"),
+			@ApiResponse(responseCode="404",
+			description="Recipe is not authored by the logged in user.")
+		}
+	)
 	@CrossOrigin
 	@DeleteMapping("/delete/recipe/{id}")
 	public ResponseEntity<?> deleteRecipe(@RequestHeader (name="Authorization") String token, @PathVariable int id) throws ResourceNotFoundException {
@@ -155,6 +220,18 @@ public class RecipeController {
 			
 	}
 	
+	@Operation(summary = "Update a recipe",
+			description = "Updates a recipe provided in the request body in the database to the recipe provided's"
+					+ " information so long as that recipe is under the ownership of the logged in user.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Recipe deleted"),
+			@ApiResponse(responseCode="400",
+			description="Id does not correspond to a recipe"),
+			@ApiResponse(responseCode="404",
+			description="Recipe is not authored by the logged in user.")
+		}
+	)
 	@CrossOrigin
 	@PatchMapping("/patch/recipe")
 	public ResponseEntity<?> updateRecipe(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe recipe) throws ResourceNotFoundException {
@@ -176,6 +253,16 @@ public class RecipeController {
 		return ResponseEntity.status(200).body(updated);
 	}
 	
+	@Operation(summary = "Remove a favorite",
+			description = "Removes a favorite to a recipe from the database based off a recipe id, so long as"
+					+ " the recipe provided has a corresponding favorite by the logged in user.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Favorite removed"),
+			@ApiResponse(responseCode="400",
+			description="Recipe id does not correspond to a favorite by the user")
+		}
+	)
 	@CrossOrigin
 	@DeleteMapping("/add/recipe/favorite/{id}")
 	public ResponseEntity<?> unfavoriteRecipie(@RequestHeader (name="Authorization") String token, @PathVariable int id) throws ResourceNotFoundException {
@@ -199,7 +286,16 @@ public class RecipeController {
 		
 	}
 	
-	// Adds and removes favorites depending on if the user has already favorited it.
+	@Operation(summary = "Add a favorite",
+			description = "Adds a favorite to a recipe from the database based off a recipe id, so long as"
+					+ " the recipe provided has a corresponding favorite by the logged in user.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Favorite added"),
+			@ApiResponse(responseCode="400",
+			description="Recipe id does not correspond to a favorite by the user")
+		}
+	)
 	@CrossOrigin
 	@PostMapping("/add/recipe/favorite/{id}")
 	public ResponseEntity<?> favoriteRecipie(@RequestHeader (name="Authorization") String token, @PathVariable int id) throws ResourceNotFoundException {
