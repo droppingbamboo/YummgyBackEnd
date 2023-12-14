@@ -35,6 +35,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -97,7 +98,7 @@ public class UserContollerTest {
     }
     
     @Test
-    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
+    @WithMockUser(username = "testUser", password = "testPassword")
     public void testGetUserFavorites() throws Exception {
         // Mock data
         User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
@@ -169,6 +170,121 @@ public class UserContollerTest {
         verify(userRepository, times(1)).findById(1);
         verifyNoMoreInteractions(userRepository);
     }
+    
+    @Test
+    @WithMockUser(username = "testUser", roles = "USER")
+    public void testAddUser() throws Exception {
+        // Mock data
+        User newUser = new User();
+        newUser.setUserId(null);  // Setting userId to null to simulate a new user
+        newUser.setYumUsername("John Doo");
+        newUser.setYumPassword("pass123");
+
+        // Mock UserRepository response
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User savedUser = invocation.getArgument(0);
+            savedUser.setUserId(11);  // Assigning a userId to simulate the saved user
+            return savedUser;
+        });
+
+        // Perform the POST request
+        mvc.perform(post("/api/add/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(newUser)))  // Use your asJsonString method
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.userId").value(11))  // Check for the assigned userId
+                .andExpect(jsonPath("$.yumUsername").value("John Doo"))
+                .andExpect(jsonPath("$.yumPassword").doesNotExist());  // Ensure yumPassword is not returned
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoMoreInteractions(userRepository);
+    }
+    
+    @Test
+    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
+    public void testDeleteUser() throws Exception {
+        // Mock data
+        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+
+        // Mock UserRepository response
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
+        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
+
+        // Perform the DELETE request
+        mvc.perform(delete("/api/delete/user/1").header("Authorization", "Bearer test-token"))
+                .andExpect(status().isOk());
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).findById(1);
+        verify(userRepository, times(1)).deleteById(1);
+        verify(jwtUtil, times(1)).getLoggedInUser("test-token");
+        verifyNoMoreInteractions(userRepository, jwtUtil);
+    }
+    
+    @Test
+    @WithMockUser(username = "testUser", roles = "USER")
+    public void testGetLoggedInUserFavorites() throws Exception {
+        // Mock data
+        User testUser = new User();
+        testUser.setUserId(1);  // Set a valid user ID
+        testUser.setYumUsername("testUser");
+        testUser.setYumPassword("password");
+        
+        // Mock the JwtUtil behavior
+        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
+
+        // Mock the repository response for favorites (an empty list)
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
+
+        // Perform the request
+        mvc.perform(get("/api/users/favorites").header("Authorization", "Bearer token123"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))  // Ensure content type is set
+                .andExpect(content().json("[]"));  // Verify that the response body is an empty list (no favorites)
+        
+        // Verify interactions
+        verify(jwtUtil, times(1)).getLoggedInUser(anyString());
+        verifyNoMoreInteractions(jwtUtil);
+        verify(userRepository, times(1)).findById(anyInt());
+        verifyNoMoreInteractions(userRepository);
+    }
+//    @Test
+//    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
+//    public void testGetLoggedInUserRecipes() throws Exception {
+//        // Mock data
+//        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+//        Recipe recipe1 = new Recipe(1, "Recipe 1", 30, "Ingredients 1", "Directions 1", null, testUser, new ArrayList<>());
+//        Recipe recipe2 = new Recipe(2, "Recipe 2", 45, "Ingredients 2", "Directions 2", null, testUser, new ArrayList<>());
+//        testUser.setRecipes(List.of(recipe1, recipe2));
+//
+//        // Mock JwtUtil response
+//        when(jwtUtil.getLoggedInUser("test-token")).thenReturn(testUser);
+//
+//        // Perform the GET request
+//        MvcResult result = mvc.perform(get("/api/users/recipes").header("Authorization", "Bearer test-token"))
+//                .andExpect(status().isOk())
+//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+//                .andReturn();
+//
+//        // Parse JSON manually
+//        String jsonResponse = result.getResponse().getContentAsString();
+//        JSONArray jsonArray = new JSONArray(jsonResponse);
+//
+//        // Your assertions on jsonArray
+//        assertThat(jsonArray.length()).isEqualTo(2);
+//
+//        JSONObject recipe1Json = jsonArray.getJSONObject(0);
+//        assertThat(recipe1Json.getInt("recipeId")).isEqualTo(1);
+//
+//        JSONObject recipe2Json = jsonArray.getJSONObject(1);
+//        assertThat(recipe2Json.getInt("recipeId")).isEqualTo(2);
+//
+//        // Verify interactions with JwtUtil
+//        verify(jwtUtil, times(1)).getLoggedInUser("test-token");
+//        verifyNoMoreInteractions(jwtUtil);
+//    }
 
 	// converts any object to a JSON string
 	public static String asJsonString(final Object obj) {
