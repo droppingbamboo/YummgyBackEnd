@@ -35,7 +35,7 @@ public class User implements Serializable{
 	@Column(unique = true, nullable = false)
 	private String yumUsername;
 	
-	@Schema(description="The password of a user, which is stored in an encrypted manner.", example="342fdfsdf$T@fegg6$", required=true, nullable=false)
+	@Schema(description="The password of a user, which is stored in an encrypted manner, and never sent in JSON responses.", example="342fdfsdf$T@fegg6$", required=true, nullable=false)
 	@NotBlank
 	@Column(nullable = false)
 	private String yumPassword;
