@@ -15,7 +15,13 @@ import com.cognixia.jump.model.AuthenticationRequest;
 import com.cognixia.jump.model.AuthenticationResponse;
 import com.cognixia.jump.util.JwtUtil;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
+@Tag(name = "Authentication", description = "Handles authentication, and only authentication.")
 public class AuthenticationController {
 
 	@Autowired
@@ -28,7 +34,17 @@ public class AuthenticationController {
 	JwtUtil jwtUtil;
 	
 	
-
+	@Operation(summary = "Authenticate a user",
+			description = "Takes in a user's username and unencrypted password and "
+					+ "checks if that user and their encrypted password is in the user database, and if so allows them security access"
+					+ " by returning a valid bearer JWT.")
+	@ApiResponses({
+			@ApiResponse(responseCode="201",
+			description="Authentication Approved"),
+			@ApiResponse(responseCode="400",
+			description="Incorrect username or password")
+		}
+	)
 	@PostMapping("/authenticate")
 	public ResponseEntity<?> createJwtToken(@RequestBody AuthenticationRequest request) throws Exception {
 		
