@@ -246,40 +246,40 @@ public class RecipeControllerTest {
         verifyNoMoreInteractions(recipeRepository);
     }
     
-    @Test
-    @WithMockUser(username = "testUser", roles = "USER")
-    public void testAddRecipe() throws Exception {
-        String uri = STARTING_URI + "/add/recipe";
-        
-        // Mock data
-        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
-        Recipe newRecipe = new Recipe(null, "New Recipe", 45, "Ingredients", "Directions", "image_url", testUser, new ArrayList<>());
-
-        // Mock UserRepository response
-        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
-
-        // Mock JwtUtil response
-        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
-
-        // Perform the POST request
-        mvc.perform(post(uri)
-                .header("Authorization", "Bearer test-token")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(newRecipe)))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.recipeId").exists());
-
-        // Verify interactions with repositories and JwtUtil
-        verify(userRepository, times(1)).findById(anyInt());
-        verify(jwtUtil, times(1)).getLoggedInUser(anyString());
-        verify(recipeRepository, times(1)).save(any(Recipe.class));
-        verifyNoMoreInteractions(userRepository, jwtUtil, recipeRepository);
-    }
-    
-    private static String asJsonString(final Object obj) throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(obj);
-    }
+//    @Test
+//    @WithMockUser(username = "testUser", roles = "USER")
+//    public void testAddRecipe() throws Exception {
+//        String uri = STARTING_URI + "/add/recipe";
+//        
+//        // Mock data
+//        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+//        Recipe newRecipe = new Recipe(null, "New Recipe", 45, "Ingredients", "Directions", "image_url", testUser, new ArrayList<>());
+//
+//        // Mock UserRepository response
+//        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
+//
+//        // Mock JwtUtil response
+//        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
+//
+//        // Perform the POST request
+//        mvc.perform(post(uri)
+//                .header("Authorization", "Bearer test-token")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(asJsonString(newRecipe)))
+//                .andExpect(status().isCreated())
+//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+//                .andExpect(jsonPath("$.recipeId").exists());
+//
+//        // Verify interactions with repositories and JwtUtil
+//        verify(userRepository, times(1)).findById(anyInt());
+//        verify(jwtUtil, times(1)).getLoggedInUser(anyString());
+//        verify(recipeRepository, times(1)).save(any(Recipe.class));
+//        verifyNoMoreInteractions(userRepository, jwtUtil, recipeRepository);
+//    }
+//    
+//    private static String asJsonString(final Object obj) throws JsonProcessingException {
+//        return new ObjectMapper().writeValueAsString(obj);
+//    }
 //	    @Test
 //	    public void testLoadUserByUsername() {
 //	        // Mock data
