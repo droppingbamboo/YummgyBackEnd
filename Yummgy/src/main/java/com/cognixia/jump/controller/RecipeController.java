@@ -104,8 +104,8 @@ public class RecipeController {
 		return repo.findByTitleContaining(search);
 	}
 	
-	@Operation(summary = "Search for recipes according to the string provided",
-			description = "Grab all recipes fitting the search criteria provided.")
+	@Operation(summary = "Search for recipes according to the string provided sorting by prep time",
+			description = "Grab all recipes fitting the search criteria provided sorting by prep time.")
 	@ApiResponses({
 			@ApiResponse(responseCode="200",
 			description="Search results returned")

@@ -15,12 +15,19 @@ public class MyUserDetails implements UserDetails {
 	private static final long serialVersionUID = 1L;
 	private String username;
 	private String password;
+	private boolean expired;
+	private boolean locked;
+	private boolean credentialsBad;
+	private boolean enabled;
 	private List<GrantedAuthority> authorities;
 	
 	public MyUserDetails(User user) {
 		this.username = user.getYumUsername();
 		this.password = user.getYumPassword();
-		
+		this.expired = user.isExpired();
+		this.locked = user.isLocked();
+		this.credentialsBad = user.isCredentialsBad();
+		this.enabled = user.isEnabled();
 		this.authorities = Arrays.asList(new SimpleGrantedAuthority(user.getRole().name()));
 	}
 	
@@ -32,7 +39,7 @@ public class MyUserDetails implements UserDetails {
 	@Override
 	public String getPassword() {
 		return password;
-	}
+	} 
 
 	@Override
 	public String getUsername() {
@@ -41,22 +48,22 @@ public class MyUserDetails implements UserDetails {
 	
 	@Override
 	public boolean isAccountNonExpired() {
-		return true;
+		return !expired;
 	}
 	
 	@Override
 	public boolean isAccountNonLocked() {
-		return true;
+		return !locked;
 	}
 	
 	@Override
 	public boolean isCredentialsNonExpired() {
-		return true;
+		return !credentialsBad;
 	}
 	
 	@Override
 	public boolean isEnabled() {
-		return true;
+		return enabled;
 	}
 
 }

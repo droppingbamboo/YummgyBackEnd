@@ -5,19 +5,23 @@ use yummgy_db;
 CREATE TABLE users (
     user_id INT PRIMARY KEY 
 				AUTO_INCREMENT,
-    yum_username VARCHAR(255) NOT NULL,    
-    yum_password VARCHAR(255) NOT NULL
-   
+    yum_username VARCHAR(255) UNIQUE NOT NULL,    
+    yum_password VARCHAR(255) NOT NULL,
+	role ENUM ("ROLE_USER", "ROLE_ADMIN"),
+    expired boolean,
+    locked boolean,
+    credentials_bad boolean,
+    enabled boolean
 );
 
-insert into users(yum_username, yum_password, role) 
-	values('BrionneB', "CogniJump23", "ROLE_USER");
-insert into users(yum_username, yum_password, role) 
-	values('BryanD', "CogniJump23", "ROLE_USER");
-insert into users(yum_username, yum_password, role) 
-	values('AbdulM', "CogniJump23", "ROLE_ADMIN");
-insert into users(yum_username, yum_password, role) 
-	values('GrantS', "CogniJump23", "ROLE_ADMIN");
+insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
+	values('BrionneB', "CogniJump23", "ROLE_USER", true, false, false, true);
+insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
+	values('BryanD', "CogniJump23", "ROLE_USER", false, true, false, true);
+insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
+	values('AbdulM', "CogniJump23", "ROLE_ADMIN", false, false, true, true);
+insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
+	values('GrantS', "CogniJump23", "ROLE_ADMIN", false, false, false, false);
 
 CREATE TABLE recipe (
     recipe_id INT PRIMARY KEY 
