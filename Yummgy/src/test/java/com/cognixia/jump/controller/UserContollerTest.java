@@ -54,6 +54,7 @@ import com.cognixia.jump.service.MyUserDetailsService;
 import com.cognixia.jump.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 
 @WebMvcTest(UserController.class)
 public class UserContollerTest {
@@ -170,7 +171,53 @@ public class UserContollerTest {
         verify(userRepository, times(1)).findById(1);
         verifyNoMoreInteractions(userRepository);
     }
-    
+    @Test
+    @WithMockUser(username = "testUser", password = "testPassword")
+    public void testGetSearchUsers() throws Exception {
+        // Mock data
+        List<User> users = new ArrayList<>();
+        users.add(new User(1, "JohnDoe", "password", new ArrayList<>(), new ArrayList<>()));
+
+        // Mock UserRepository response
+        when(userRepository.findAll()).thenReturn(users);
+
+        // Perform the GET request
+        mvc.perform(get("/api/users/search/").with(user("testUser")))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.length()").value(users.size()))
+                .andExpect(jsonPath("$[0].userId").value(users.get(0).getUserId()))
+                .andExpect(jsonPath("$[0].yumUsername").value(users.get(0).getYumUsername()));
+
+        // Verify interactions with userRepository
+        verify(userRepository, times(1)).findAll();
+        verifyNoMoreInteractions(userRepository);
+    }
+
+    @Test
+    @WithMockUser(username = "testUser", password = "testPassword")
+    public void testSearchUsers() throws Exception {
+        // Mock data
+        List<User> users = new ArrayList<>();
+        users.add(new User(1, "JohnDoe", "password", new ArrayList<>(), new ArrayList<>()));
+
+        // Mock UserRepository response
+        when(userRepository.findByYumUsernameContaining(anyString())).thenReturn(users);
+
+        // Perform the GET request with search parameter
+        mvc.perform(get("/api/users/search/test").with(user("testUser")))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.length()").value(users.size()))
+                .andExpect(jsonPath("$[0].userId").value(users.get(0).getUserId()))
+                .andExpect(jsonPath("$[0].yumUsername").value(users.get(0).getYumUsername()));
+
+        // Verify interactions with userRepository
+        verify(userRepository, times(1)).findByYumUsernameContaining("test");
+        verifyNoMoreInteractions(userRepository);
+    }
+
+
 //    @Test
 //    @WithMockUser(username = "testUser", roles = "USER")
 //    public void testAddUser() throws Exception {
