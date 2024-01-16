@@ -59,6 +59,39 @@ public class UserController {
 		return repo.findAll();
 	}
 	
+	@Operation(summary = "Get all the users in the users table",
+			description = "Gets all the users from the users table in the yummgy_db database."
+					+ " each user grabbed has an id and username, but does not show user passwords.")
+	@ApiResponses(
+			@ApiResponse(responseCode="200",
+			description="Users have been found")
+	)
+	@CrossOrigin
+	@GetMapping("/users/search/")
+	public List<User> getSearchUsers() {
+		
+		return repo.findAll();
+	}
+	
+	@Operation(summary = "Search for Users according to the string provided",
+			description = "Grab all users fitting the search criteria provided.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Search results returned")
+		}
+	)
+	@CrossOrigin
+	@GetMapping("/users/search/{search}")
+	public List<User> searchUsers(@PathVariable String search) {
+		
+		if(search.equals(""))
+		{
+			return getUsers();
+		}
+		
+		return repo.findByYumUsernameContaining(search);
+	}
+	
 
 	@Operation(summary = "Add a user to the users table",
 			description = "Adds a user to the user table in the database based off a username and password."
@@ -78,6 +111,30 @@ public class UserController {
 		newUser.setYumPassword( encoder.encode( newUser.getYumPassword() ) );
 		
 		newUser.setRole(Role.ROLE_USER);
+		
+		User added = repo.save(newUser); 
+		
+		return ResponseEntity.status(201).body(added);
+	}
+	
+	@Operation(summary = "Add an admin user to the users table",
+			description = "Adds an admin user to the user table in the database based off a username and password and if the logged in user is an admin."
+					+ "The password is encrypted before it is stored to ensure that passwords are secure.")
+	@ApiResponses( value = {
+			@ApiResponse(responseCode="201",
+			description="Admin user has been created"),
+			@ApiResponse(responseCode="400",
+			description="Admin user data not formatted properly"),
+			@ApiResponse(responseCode="403",
+			description="Logged in user not an admin")}
+	)
+	@CrossOrigin
+	@PostMapping("/add/user/admin")
+	public ResponseEntity<?> addUserAdmin(@Valid @RequestBody User newUser) {
+		
+		newUser.setUserId(null);
+		
+		newUser.setYumPassword( encoder.encode( newUser.getYumPassword() ) );
 		
 		User added = repo.save(newUser); 
 		

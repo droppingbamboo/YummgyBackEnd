@@ -12,5 +12,7 @@ import com.cognixia.jump.model.User;
 public interface UserRepository extends JpaRepository<User, Integer>{
 	public List<User> findAll();
 	public Optional<User> findByYumUsername(String yumUsername);
+	
+	public List<User> findByYumUsernameContaining(String search);
 
 }
