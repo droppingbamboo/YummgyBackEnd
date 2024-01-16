@@ -56,6 +56,7 @@ public class SecurityConfiguration {
         .requestMatchers(AUTH_WHITE_LIST).permitAll()
         .requestMatchers(HttpMethod.POST,"/api/add/user").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/search/**").permitAll()
+        .requestMatchers(HttpMethod.GET,"/api/users").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/latest/**").permitAll()
         .requestMatchers("/authenticate").permitAll()
         .anyRequest().authenticated()
