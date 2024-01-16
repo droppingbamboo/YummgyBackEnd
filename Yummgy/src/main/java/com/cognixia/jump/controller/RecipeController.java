@@ -290,7 +290,6 @@ public class RecipeController {
 		Optional<Recipe> found = repo.findById(id);
 		
 		if(found.isPresent()) {
-			
 			repo.deleteRecipe(id);
 			
 			return ResponseEntity.status(200).body(found.get());	

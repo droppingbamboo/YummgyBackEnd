@@ -111,7 +111,7 @@ public class UserController {
 		
 		newUser.setYumPassword( encoder.encode( newUser.getYumPassword() ) );
 		
-		newUser.setRole(Role.ROLE_USER);
+		newUser.setRole(Role.ROLE_ADMIN);
 		
 		newUser.setEnabled(true);
 		
