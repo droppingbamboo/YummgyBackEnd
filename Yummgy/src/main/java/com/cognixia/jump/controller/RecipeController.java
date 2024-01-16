@@ -1,5 +1,6 @@
 package com.cognixia.jump.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -103,6 +104,32 @@ public class RecipeController {
 		return repo.findByTitleContaining(search);
 	}
 	
+	@Operation(summary = "Search for recipes according to the string provided",
+			description = "Grab all recipes fitting the search criteria provided.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Search results returned")
+		}
+	)
+	@CrossOrigin
+	@GetMapping("/recipes/search/preptime/{search}")
+	public List<Recipe> searchRecipeTitlesByPrepTime(@PathVariable String search) {
+		
+		if(search.equals(""))
+		{
+			return getRecipes();
+		}
+		
+		return repo.findByTitleSortByPrep(search);
+	}
+	
+	@CrossOrigin
+	@GetMapping("/recipes/search/preptime/")
+	public List<Recipe> getRecipesPrepTime() {
+		
+		return repo.findByTitleSortByPrep("");
+	}
+	
 	@Operation(summary = "Get a single recipe by id",
 			description = "Gets a single recipe by the id provided.")
 	@ApiResponses({
@@ -142,6 +169,33 @@ public class RecipeController {
         if (recipeOptional.isPresent()) {
             List<Favorites> favorites = recipeOptional.get().getFavorites();
             return ResponseEntity.status(200).body(favorites);
+        } else {
+        	throw new ResourceNotFoundException("Recipe", recipeId);
+        }
+	}
+	
+	@Operation(summary = "Get all of the users who have favorited a recipe",
+			description = "Gets a single recipes users who have favorited.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="favorited users returned"),
+			@ApiResponse(responseCode="400",
+			description="Id does not correspond to a recipe")
+		}
+	)
+	@CrossOrigin
+	@GetMapping("/recipes/favorites/users/{recipeId}")
+	public ResponseEntity<?> getFavoritesUsers(@PathVariable int recipeId) throws ResourceNotFoundException {
+		Optional<Recipe> recipeOptional = repo.findById(recipeId);
+
+        if (recipeOptional.isPresent()) {
+            List<Favorites> favorites = recipeOptional.get().getFavorites();
+            List<User> users = new ArrayList<User>();
+            for(int i = 0; i < favorites.size(); i++)
+            {
+            	users.add(favorites.get(i).getUser());
+            }
+            return ResponseEntity.status(200).body(users);
         } else {
         	throw new ResourceNotFoundException("Recipe", recipeId);
         }

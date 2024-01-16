@@ -57,6 +57,7 @@ public class SecurityConfiguration {
         .requestMatchers(HttpMethod.POST,"/api/admin/**").hasRole("ADMIN")
         .requestMatchers(HttpMethod.POST,"/api/add/user").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/users/search/**").permitAll()
+        .requestMatchers(HttpMethod.GET,"/recipes/favorites/users/**").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/search/**").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/users").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/latest/**").permitAll()

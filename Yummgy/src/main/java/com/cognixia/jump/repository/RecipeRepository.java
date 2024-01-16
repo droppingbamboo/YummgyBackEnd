@@ -20,6 +20,9 @@ public interface RecipeRepository extends JpaRepository<Recipe, Integer> {
 	
 	public List<Recipe> findByTitleContaining(String search);
 	
+	@Query(value = "select * from recipe where title like %?1% order by prep_time asc", nativeQuery = true)
+	public List<Recipe> findByTitleSortByPrep(String search);
+	
 	@Transactional
 	@Modifying
 	@Query(value = "delete from recipe where recipe.recipe_id = ?1", nativeQuery = true)
