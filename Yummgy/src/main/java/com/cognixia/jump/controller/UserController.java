@@ -129,7 +129,7 @@ public class UserController {
 			description="Logged in user not an admin")}
 	)
 	@CrossOrigin
-	@PostMapping("/add/user/admin")
+	@PostMapping("/admin/add/user")
 	public ResponseEntity<?> addUserAdmin(@Valid @RequestBody User newUser) {
 		
 		newUser.setUserId(null);

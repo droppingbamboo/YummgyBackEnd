@@ -54,7 +54,7 @@ public class SecurityConfiguration {
 		http.csrf().disable()
         .authorizeHttpRequests()
         .requestMatchers(AUTH_WHITE_LIST).permitAll()
-        .requestMatchers(HttpMethod.POST,"/api/add/user/admin").hasRole("ADMIN")
+        .requestMatchers(HttpMethod.POST,"/api/admin/**").hasRole("ADMIN")
         .requestMatchers(HttpMethod.POST,"/api/add/user").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/users/search/**").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/search/**").permitAll()

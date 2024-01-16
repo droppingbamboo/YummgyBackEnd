@@ -220,6 +220,33 @@ public class RecipeController {
 			
 	}
 	
+	@Operation(summary = "Delete any recipe",
+			description = "Deletes any recipe so long as the user is an admin.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Recipe deleted"),
+			@ApiResponse(responseCode="400",
+			description="Id does not correspond to a recipe")
+		}
+	)
+	@CrossOrigin
+	@DeleteMapping("/admin/delete/recipe/{id}")
+	public ResponseEntity<?> deleteRecipeAdmin(@RequestHeader (name="Authorization") String token, @PathVariable int id) throws ResourceNotFoundException {
+		
+		Optional<Recipe> found = repo.findById(id);
+		
+		if(found.isPresent()) {
+			
+			repo.deleteRecipe(id);
+			
+			return ResponseEntity.status(200).body(found.get());	
+		}
+		else {
+			throw new ResourceNotFoundException("Recipe", id);
+		}
+			
+	}
+	
 	@Operation(summary = "Update a recipe",
 			description = "Updates a recipe provided in the request body in the database to the recipe provided's"
 					+ " information so long as that recipe is under the ownership of the logged in user.")
@@ -245,6 +272,33 @@ public class RecipeController {
 		{
 			return ResponseEntity.status(404).body("recipe not yours");
 		}
+		recipe.setFavorites(found.get().getFavorites());
+		recipe.setAuthor(found.get().getAuthor());
+		
+		Recipe updated = repo.save(recipe);
+		
+		return ResponseEntity.status(200).body(updated);
+	}
+	
+	@Operation(summary = "Update any recipe",
+			description = "Updates a recipe provided in the request body in the database to the recipe provided's")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Recipe deleted"),
+			@ApiResponse(responseCode="400",
+			description="Id does not correspond to a recipe")
+		}
+	)
+	@CrossOrigin
+	@PatchMapping("/admin/patch/recipe")
+	public ResponseEntity<?> updateRecipeAdmin(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe recipe) throws ResourceNotFoundException {
+		
+		Optional<Recipe> found = repo.findById(recipe.getRecipeId());
+		
+		if(found.isEmpty()) {
+			throw new ResourceNotFoundException("recipe", recipe.getRecipeId());
+		}
+		
 		recipe.setFavorites(found.get().getFavorites());
 		recipe.setAuthor(found.get().getAuthor());
 		
