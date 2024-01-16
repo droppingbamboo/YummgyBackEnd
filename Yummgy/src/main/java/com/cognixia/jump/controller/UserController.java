@@ -112,6 +112,14 @@ public class UserController {
 		
 		newUser.setRole(Role.ROLE_USER);
 		
+		newUser.setEnabled(true);
+		
+		newUser.setLocked(false);
+		
+		newUser.setCredentialsBad(false);
+		
+		newUser.setExpired(false);
+		
 		User added = repo.save(newUser); 
 		
 		return ResponseEntity.status(201).body(added);
@@ -136,7 +144,17 @@ public class UserController {
 		
 		newUser.setYumPassword( encoder.encode( newUser.getYumPassword() ) );
 		
-		User added = repo.save(newUser); 
+		User added = repo.save(newUser);
+		
+		newUser.setRole(Role.ROLE_ADMIN);
+		
+		newUser.setEnabled(true);
+		
+		newUser.setLocked(false);
+		
+		newUser.setCredentialsBad(false);
+		
+		newUser.setExpired(false);
 		
 		return ResponseEntity.status(201).body(added);
 	}
@@ -261,4 +279,5 @@ public class UserController {
 	public ResponseEntity<?> getLoggedInUser(@RequestHeader (name="Authorization") String token) {
 		return ResponseEntity.status(200).body(jwtUtil.getLoggedInUser(token));
 	}
+	
 }

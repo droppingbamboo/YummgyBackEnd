@@ -60,6 +60,7 @@ public class SecurityConfiguration {
         .requestMatchers(HttpMethod.GET,"/recipes/favorites/users/**").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/search/**").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/users").permitAll()
+        .requestMatchers(HttpMethod.GET,"/api/users/**").permitAll()
         .requestMatchers(HttpMethod.GET,"/api/recipes/latest/**").permitAll()
         .requestMatchers("/authenticate").permitAll()
         .anyRequest().authenticated()

@@ -50,6 +50,18 @@ public class User implements Serializable{
 	@Column(nullable = false)
 	private Role role;
 	
+	@Column(columnDefinition = "boolean default false")
+	private boolean expired;
+	
+	@Column(columnDefinition = "boolean default false")
+	private boolean locked;
+	
+	@Column(columnDefinition = "boolean default false")
+	private boolean credentialsBad;
+	
+	@Column(columnDefinition = "boolean default true")
+	private boolean enabled;
+	
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
 	@JsonIgnore
 	private List<Recipe> recipes;
@@ -118,6 +130,38 @@ public class User implements Serializable{
 	
 	public void setRole(Role role) {
 		this.role = role;
+	}
+	
+	public boolean isExpired() {
+		return expired;
+	}
+	
+	public void setExpired(boolean expired) {
+		this.expired = expired;
+	}
+	
+	public boolean isLocked() {
+		return locked;
+	}
+	
+	public void setLocked(boolean locked) {
+		this.locked = locked;
+	}
+	
+	public boolean isCredentialsBad() {
+		return credentialsBad;
+	}
+	
+	public void setCredentialsBad(boolean credentialsBad) {
+		this.credentialsBad = credentialsBad;
+	}
+	
+	public boolean isEnabled() {
+		return enabled;
+	}
+	
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 	
 	public String toJson() {
