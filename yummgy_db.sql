@@ -10,14 +10,14 @@ CREATE TABLE users (
    
 );
 
-insert into users(yum_username, yum_password) 
-	values('BrionneB', "CogniJump23");
-insert into users(yum_username, yum_password) 
-	values('BryanD', "CogniJump23");
-insert into users(yum_username, yum_password) 
-	values('AbdulM', "CogniJump23");
-insert into users(yum_username, yum_password) 
-	values('GrantS', "CogniJump23");
+insert into users(yum_username, yum_password, role) 
+	values('BrionneB', "CogniJump23", "ROLE_USER");
+insert into users(yum_username, yum_password, role) 
+	values('BryanD', "CogniJump23", "ROLE_USER");
+insert into users(yum_username, yum_password, role) 
+	values('AbdulM', "CogniJump23", "ROLE_ADMIN");
+insert into users(yum_username, yum_password, role) 
+	values('GrantS', "CogniJump23", "ROLE_ADMIN");
 
 CREATE TABLE recipe (
     recipe_id INT PRIMARY KEY 
