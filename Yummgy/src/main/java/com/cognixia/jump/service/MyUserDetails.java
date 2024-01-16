@@ -21,7 +21,7 @@ public class MyUserDetails implements UserDetails {
 		this.username = user.getYumUsername();
 		this.password = user.getYumPassword();
 		
-		this.authorities = Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
+		this.authorities = Arrays.asList(new SimpleGrantedAuthority(user.getRole().name()));
 	}
 	
 	@Override

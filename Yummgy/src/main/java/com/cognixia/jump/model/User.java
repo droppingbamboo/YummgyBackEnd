@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,6 +26,10 @@ import jakarta.validation.constraints.NotBlank;
 public class User implements Serializable{
 	
 	private static final long serialVersionUID = 1L;
+	
+	public static enum Role {
+		ROLE_USER, ROLE_ADMIN
+	}
 	
 	@Schema(description="The id of a user.", example="1", required=true, nullable=false)
 	@Id
@@ -39,6 +45,10 @@ public class User implements Serializable{
 	@NotBlank
 	@Column(nullable = false)
 	private String yumPassword;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private Role role;
 	
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
 	@JsonIgnore
@@ -100,6 +110,14 @@ public class User implements Serializable{
 
 	public void setFavorites(List<Favorites> favorites) {
 		this.favorites = favorites;
+	}
+	
+	public Role getRole() {
+		return role;
+	}
+	
+	public void setRole(Role role) {
+		this.role = role;
 	}
 	
 	public String toJson() {

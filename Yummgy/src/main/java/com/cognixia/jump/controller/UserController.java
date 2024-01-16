@@ -20,6 +20,7 @@ import com.cognixia.jump.exception.ResourceNotFoundException;
 import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.Recipe;
 import com.cognixia.jump.model.User;
+import com.cognixia.jump.model.User.Role;
 import com.cognixia.jump.repository.UserRepository;
 import com.cognixia.jump.util.JwtUtil;
 
@@ -75,6 +76,8 @@ public class UserController {
 		newUser.setUserId(null);
 		
 		newUser.setYumPassword( encoder.encode( newUser.getYumPassword() ) );
+		
+		newUser.setRole(Role.ROLE_USER);
 		
 		User added = repo.save(newUser); 
 		
