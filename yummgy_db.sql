@@ -88,7 +88,7 @@ CREATE TABLE favorites (
 	user_id INT,
     recipe_id INT,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (recipe_id) REFERENCES recipe(recipe_id)     
+    FOREIGN KEY (recipe_id) REFERENCES recipe(recipe_id) ON DELETE CASCADE       
 );
        
     
