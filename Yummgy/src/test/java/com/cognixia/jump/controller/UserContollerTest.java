@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.aspectj.lang.annotation.Before;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +38,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -70,6 +74,16 @@ public class UserContollerTest {
     
     @MockBean
     private MyUserDetailsService userDetailsService;
+    
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @BeforeEach
+    public void setup()
+    {
+        //Init MockMvc Object and build
+        mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
 
     @Test
     @WithMockUser(username = "testUser", password = "testPassword")
@@ -132,7 +146,7 @@ public class UserContollerTest {
         verifyNoMoreInteractions(userRepository);
     }
     @Test
-    @WithMockUser(username = "adminUser", password = "adminPassword", roles = "ADMIN")
+    @WithMockUser(username = "testUser", password = "testPassword", roles = "ADMIN")
     public void testToggleEnabled() throws Exception {
         // Mock data
         User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
@@ -144,7 +158,7 @@ public class UserContollerTest {
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
         // Perform the PATCH request
-        MvcResult result = mvc.perform(patch("/api/admin/user/security/enabled/3").header("Authorization", "Bearer test-token"))
+        MvcResult result = mvc.perform(patch("/api/admin/user/security/enabled/1").header("Authorization", "Bearer test-token"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -268,36 +282,37 @@ public class UserContollerTest {
 
 
 
-//    @Test
-//    @WithMockUser(username = "testUser", roles = "ADMIN")
-//    public void testAddUser() throws Exception {
-//        // Mock data
-//        User newUser = new User();
-//        newUser.setUserId(null);  // Setting userId to null to simulate a new user
-//        newUser.setYumUsername("John Doo");
-//        newUser.setYumPassword("pass123");
-//
-//        // Mock UserRepository response
-//        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-//            User savedUser = invocation.getArgument(0);
-//            savedUser.setUserId(1);  // Assigning a userId to simulate the saved user
-//            return savedUser;
-//        });
-//
-//        // Perform the POST request
-//        mvc.perform(post("/api/add/user")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(asJsonString(newUser)))  // Use your asJsonString method
-//                .andExpect(status().isCreated())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-//                .andExpect(jsonPath("$.userId").value(1))  // Check for the assigned userId
-//                .andExpect(jsonPath("$.yumUsername").value("John Doo"))
-//                .andExpect(jsonPath("$.yumPassword").doesNotExist());  // Ensure yumPassword is not returned
-//
-//        // Verify interactions with UserRepository
-//        verify(userRepository, times(1)).save(any(User.class));
-//        verifyNoMoreInteractions(userRepository);
-//    }
+    @Test
+    @WithMockUser(username = "testUser", roles = "ADMIN")
+    public void testAddUser() throws Exception {
+        // Mock data
+        User newUser = new User();
+        newUser.setRole(Role.ROLE_USER);
+        newUser.setUserId(1);  // Setting userId to null to simulate a new user
+        newUser.setYumUsername("John Doo");
+        newUser.setYumPassword("pass123");
+
+        // Mock UserRepository response
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User savedUser = invocation.getArgument(0);
+            savedUser.setUserId(1);  // Assigning a userId to simulate the saved user
+            return savedUser;
+        });
+        System.out.println(newUser.toJson());
+        // Perform the POST request
+        mvc.perform(post("/api/add/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content((newUser.toJson())))  // Use your asJsonString method
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.userId").value(1))  // Check for the assigned userId
+                .andExpect(jsonPath("$.yumUsername").value("John Doo"))
+                .andExpect(jsonPath("$.yumPassword").doesNotExist());  // Ensure yumPassword is not returned
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoMoreInteractions(userRepository);
+    }
 //    
 //    @Test
 //    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
