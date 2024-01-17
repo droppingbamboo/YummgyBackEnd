@@ -2,27 +2,25 @@ package com.cognixia.jump.controller;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,26 +33,23 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.http.HttpHeaders;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.web.server.csrf.CsrfToken;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-
+import com.cognixia.jump.filter.JwtRequestFilter;
 import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.Recipe;
 import com.cognixia.jump.model.User;
+import com.cognixia.jump.model.User.Role;
 import com.cognixia.jump.repository.UserRepository;
-import com.cognixia.jump.service.MyUserDetails;
 import com.cognixia.jump.service.MyUserDetailsService;
 import com.cognixia.jump.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
 
 @WebMvcTest(UserController.class)
 public class UserContollerTest {
@@ -71,6 +66,7 @@ public class UserContollerTest {
 
     @MockBean
     private JwtUtil jwtUtil;
+
     
     @MockBean
     private MyUserDetailsService userDetailsService;
@@ -135,7 +131,35 @@ public class UserContollerTest {
         verify(userRepository, times(1)).findById(1);
         verifyNoMoreInteractions(userRepository);
     }
-    
+    @Test
+    @WithMockUser(username = "adminUser", password = "adminPassword", roles = "ADMIN")
+    public void testToggleEnabled() throws Exception {
+        // Mock data
+        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+        testUser.setRole(Role.ROLE_ADMIN);       
+        testUser.setEnabled(true);  // Set initial enabled status
+
+        // Mock UserRepository response
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // Perform the PATCH request
+        MvcResult result = mvc.perform(patch("/api/admin/user/security/enabled/3").header("Authorization", "Bearer test-token"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // Parse JSON manually
+        String jsonResponse = result.getResponse().getContentAsString();
+
+        // Your assertions on jsonResponse
+        assertThat(jsonResponse).isEqualTo("false");  // Assuming toggling sets to false in this case
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).findById(1);
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoMoreInteractions(userRepository);
+    }
     @Test
     @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
     public void testGetUserRecipes() throws Exception {
@@ -217,9 +241,35 @@ public class UserContollerTest {
         verifyNoMoreInteractions(userRepository);
     }
 
+//    @Test
+//    @WithMockUser(username = "testUser", password = "testPassword")
+//    public void testGetLoggedInUser() throws Exception {
+//        // Mock data
+//        User loggedInUser = new User(12, "John", "testPassword", new ArrayList<>(), new ArrayList<>());
+//
+//        // Mock JwtUtil behavior
+//        when(jwtUtil.getLoggedInUser("test-token")).thenReturn(loggedInUser);
+//
+//        // Perform the GET request
+//        MvcResult result = mvc.perform(get("/api/users/loggedin").header("Authorization", "Bearer test-token"))
+//                .andExpect(status().isOk())
+//                .andReturn();
+//
+//        // Get the response content
+//        String jsonResponse = result.getResponse().getContentAsString();
+//
+//        // Apply JSON path assertions or other relevant assertions
+//
+//        // Verify interactions with JwtUtil
+//        verify(jwtUtil, times(1)).getLoggedInUser("test-token");
+//        verifyNoMoreInteractions(jwtUtil);
+//    }
+
+
+
 
 //    @Test
-//    @WithMockUser(username = "testUser", roles = "USER")
+//    @WithMockUser(username = "testUser", roles = "ADMIN")
 //    public void testAddUser() throws Exception {
 //        // Mock data
 //        User newUser = new User();
@@ -230,7 +280,7 @@ public class UserContollerTest {
 //        // Mock UserRepository response
 //        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
 //            User savedUser = invocation.getArgument(0);
-//            savedUser.setUserId(11);  // Assigning a userId to simulate the saved user
+//            savedUser.setUserId(1);  // Assigning a userId to simulate the saved user
 //            return savedUser;
 //        });
 //
@@ -240,7 +290,7 @@ public class UserContollerTest {
 //                .content(asJsonString(newUser)))  // Use your asJsonString method
 //                .andExpect(status().isCreated())
 //                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-//                .andExpect(jsonPath("$.userId").value(11))  // Check for the assigned userId
+//                .andExpect(jsonPath("$.userId").value(1))  // Check for the assigned userId
 //                .andExpect(jsonPath("$.yumUsername").value("John Doo"))
 //                .andExpect(jsonPath("$.yumPassword").doesNotExist());  // Ensure yumPassword is not returned
 //
