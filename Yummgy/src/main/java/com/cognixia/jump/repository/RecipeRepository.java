@@ -2,6 +2,8 @@ package com.cognixia.jump.repository;
 
 import java.util.List;
 
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,6 +21,7 @@ public interface RecipeRepository extends JpaRepository<Recipe, Integer> {
 	public List<Recipe> latestRecipesByAmount(int numberGrabbed);
 	
 	public List<Recipe> findByTitleContaining(String search);
+	public List<Recipe> findByTitleContaining(String search, Sort sort, Limit limit);
 	
 	@Query(value = "select * from recipe where title like %?1% order by prep_time asc", nativeQuery = true)
 	public List<Recipe> findByTitleSortByPrep(String search);
@@ -27,4 +30,5 @@ public interface RecipeRepository extends JpaRepository<Recipe, Integer> {
 	@Modifying
 	@Query(value = "delete from recipe where recipe.recipe_id = ?1", nativeQuery = true)
 	public int deleteRecipe(int id);
+			
 }

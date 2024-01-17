@@ -7,6 +7,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -55,79 +58,56 @@ public class RecipeController {
 	@Autowired
 	JwtUtil jwtUtil;
 	
-	@Operation(summary = "Get all the recipes in the recipe table",
-			description = "Gets all the recipes from the recipe table in the yummgy_db database."
-					+ " Only meant to be called in the case that a user searched for nothing in the search bar.")
-	@ApiResponses(
-			@ApiResponse(responseCode="200",
-			description="Recipes have been found")
-	)
-	@CrossOrigin
-	@GetMapping("/recipes/search/")
-	public List<Recipe> getRecipes() {
-		
-		return repo.findAll();
-	}
-	
-	@Operation(summary = "Get latest x number of recipes recipes",
-			description = "Gets the latest x recipes from the database, with x being the amount provided in the url.")
+	@Operation(summary = "Search recipies by all imaginable ways.",
+			description = "Searches recipes using 4 determinants. ordering determines the value by which the search is ordered (must be stated in"
+					+ " a camel case format eg. favoriteCount. Ascending, which if ASC gives results in ascending order by the ordering passed"
+					+ ", and descending if DESC passed. amount determines the number of results desired. search is the desired query to search through"
+					+ " titles for.")
 	@ApiResponses({
 			@ApiResponse(responseCode="200",
-			description="x number of latest recipes have been returned"),
+			description="recipes returned"),
 			@ApiResponse(responseCode="403",
-			description="Amount provided is not acceptable"),
+			description="Bad parameters passed.")
 		}
 	)
 	@CrossOrigin
-	@GetMapping("/recipes/latest/{amount}")
-	public List<Recipe> getLatestRecipesByAmount(@PathVariable int amount) {
-		
-		return repo.latestRecipesByAmount(amount);
+	@GetMapping("/recipes/search/{ordering}/{ascending}/{amount}/{search}")
+	public List<Recipe> searchRecipes( @PathVariable String ordering, @PathVariable String ascending, @PathVariable int amount, @PathVariable String search) {
+		if(ascending.equals("ASC"))
+		{
+			Sort sort = Sort.by(Sort.Direction.ASC, ordering);
+			return repo.findByTitleContaining(search, sort, Limit.of(amount));
+		}
+		else
+		{
+			Sort sort = Sort.by(Sort.Direction.DESC, ordering);
+			return repo.findByTitleContaining(search, sort, Limit.of(amount));
+		}
 	}
-	
-	@Operation(summary = "Search for recipes according to the string provided",
-			description = "Grab all recipes fitting the search criteria provided.")
+	@Operation(summary = "Search recipies by all imaginable ways. Returns all recipes up to the amount by ordering.",
+			description = "Searches recipes using 4 determinants. ordering determines the value by which the search is ordered (must be stated in"
+					+ " a camel case format eg. favoriteCount. Ascending, which if ASC gives results in ascending order by the ordering passed"
+					+ ", and descending if DESC passed. amount determines the number of results desired.")
 	@ApiResponses({
 			@ApiResponse(responseCode="200",
-			description="Search results returned")
+			description="recipes returned"),
+			@ApiResponse(responseCode="403",
+			description="Bad parameters passed.")
 		}
 	)
 	@CrossOrigin
-	@GetMapping("/recipes/search/{search}")
-	public List<Recipe> searchRecipeTitles(@PathVariable String search) {
-		
-		if(search.equals(""))
+	@GetMapping("/recipes/search/{ordering}/{ascending}/{amount}/")
+	public List<Recipe> searchRecipesAll( @PathVariable String ordering, @PathVariable String ascending, @PathVariable int amount) {
+		if(ascending.equals("ASC"))
 		{
-			return getRecipes();
+			Sort sort = Sort.by(Sort.Direction.ASC, ordering);
+			return repo.findByTitleContaining("", sort, Limit.of(amount));
 		}
-		
-		return repo.findByTitleContaining(search);
-	}
-	
-	@Operation(summary = "Search for recipes according to the string provided sorting by prep time",
-			description = "Grab all recipes fitting the search criteria provided sorting by prep time.")
-	@ApiResponses({
-			@ApiResponse(responseCode="200",
-			description="Search results returned")
-		}
-	)
-	@CrossOrigin
-	@GetMapping("/recipes/search/preptime/{search}")
-	public List<Recipe> searchRecipeTitlesByPrepTime(@PathVariable String search) {
-		
-		if(search.equals(""))
+		else
 		{
-			return getRecipes();
+			Sort sort = Sort.by(Sort.Direction.DESC, ordering);
+			return repo.findByTitleContaining("", sort, Limit.of(amount));
 		}
-		
-		return repo.findByTitleSortByPrep(search);
-	}
-	
-	@CrossOrigin
-	@GetMapping("/recipes/search/preptime/")
-	public List<Recipe> getRecipesPrepTime() {
-		
-		return repo.findByTitleSortByPrep("");
 	}
 	
 	@Operation(summary = "Get a single recipe by id",
@@ -380,6 +360,8 @@ public class RecipeController {
 			{
 				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
 				favoritesRepo.deleteFavorite(deleteItem.getFavoritesId());
+				found.get().setFavoriteCount(found.get().getFavoriteCount() - 1);
+				repo.save(found.get());
 				return ResponseEntity.status(200).body("Unfavorited");
 			}
 			else
@@ -413,6 +395,8 @@ public class RecipeController {
 			{
 				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
 				favoritesRepo.deleteById(deleteItem.getFavoritesId());
+				found.get().setFavoriteCount(found.get().getFavoriteCount() + 1);
+				repo.save(found.get());
 				return ResponseEntity.status(200).body("Unfavorited");
 			}
 			favoritesRepo.save(fav);

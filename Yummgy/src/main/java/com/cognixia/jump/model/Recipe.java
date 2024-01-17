@@ -61,6 +61,10 @@ public class Recipe implements Serializable {
 	@Column(nullable = true)
 	private String foodImageUrl;
 	
+	@Schema(description="Number of favorites a recipe has", example="34")
+	@Column(nullable = false)
+	private Integer favoriteCount;
+	
 	@ManyToOne
 	@JoinColumn(name = "author", referencedColumnName = "userId")
 	private User author;
@@ -82,6 +86,7 @@ public class Recipe implements Serializable {
 		this.ingredients = ingredients;
 		this.directions = directions;
 		this.foodImageUrl = foodImageUrl;
+		this.favoriteCount = 0;
 	}
 
 	public Recipe(Integer recipeId, @NotBlank String title, @Min(0) Integer prepTime, @NotBlank String ingredients,
@@ -95,6 +100,7 @@ public class Recipe implements Serializable {
 		this.foodImageUrl = foodImageUrl;
 		this.author = author;
 		this.favorites = favorites;
+		this.favoriteCount = 0;
 	}
 
 
@@ -144,6 +150,14 @@ public class Recipe implements Serializable {
 
 	public void setFoodImageUrl(String foodImageUrl) {
 		this.foodImageUrl = foodImageUrl;
+	}
+
+	public Integer getFavoriteCount() {
+		return favoriteCount;
+	}
+
+	public void setFavoriteCount(Integer favoriteCount) {
+		this.favoriteCount = favoriteCount;
 	}
 
 	public User getAuthor() {
