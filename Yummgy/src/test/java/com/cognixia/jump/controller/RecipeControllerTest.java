@@ -2,6 +2,7 @@ package com.cognixia.jump.controller;
 
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -23,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
@@ -30,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -79,7 +83,6 @@ public class RecipeControllerTest {
     @MockBean
     private JwtUtil jwtUtil;
 	    
-//	    @InjectMocks
     @MockBean
     private MyUserDetailsService userDetailsService;
 	    
@@ -245,6 +248,94 @@ public class RecipeControllerTest {
         verify(recipeRepository, times(1)).findById(recipeId);
         verifyNoMoreInteractions(recipeRepository);
     }
+    @Test
+    @WithMockUser(username = "testUser", roles = "USER")
+    public void testSearchRecipeTitlesByPrepTime() throws Exception {
+        // Mock data
+        List<Recipe> recipes = Arrays.asList(
+                new Recipe(1, "Recipe 1", 30, "Ingredients 1", "Directions 1", null, new User(), new ArrayList<>()),
+                new Recipe(2, "Recipe 2", 45, "Ingredients 2", "Directions 2", null, new User(), new ArrayList<>())
+        );
+
+        // Mock RecipeRepository response
+        when(recipeRepository.findByTitleSortByPrep(anyString())).thenReturn(recipes);
+
+        // Perform the GET request
+        mvc.perform(get("/api/recipes/search/preptime/{search}", "30"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.length()").value(recipes.size()))
+                .andExpect(jsonPath("$[0].recipeId").value(recipes.get(0).getRecipeId()))
+                .andExpect(jsonPath("$[1].recipeId").value(recipes.get(1).getRecipeId()));
+
+        // Verify interactions with RecipeRepository
+        verify(recipeRepository, times(1)).findByTitleSortByPrep("30");
+        verifyNoMoreInteractions(recipeRepository);
+    }
+    @Test
+    @WithMockUser(username = "testUser", roles = "USER")
+    public void testGetRecipesPrepTime() throws Exception {
+        // Mock data
+        List<Recipe> recipes = Arrays.asList(
+                new Recipe(1, "Recipe 1", 30, "Ingredients 1", "Directions 1", null, new User(), new ArrayList<>()),
+                new Recipe(2, "Recipe 2", 45, "Ingredients 2", "Directions 2", null, new User(), new ArrayList<>())
+        );
+
+        // Mock RecipeRepository response
+        when(recipeRepository.findByTitleSortByPrep(anyString())).thenReturn(recipes);
+
+        // Perform the GET request
+        mvc.perform(get("/api/recipes/search/preptime/"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.length()").value(recipes.size()))
+                .andExpect(jsonPath("$[0].recipeId").value(recipes.get(0).getRecipeId()))
+                .andExpect(jsonPath("$[1].recipeId").value(recipes.get(1).getRecipeId()));
+
+        // Verify interactions with RecipeRepository
+        verify(recipeRepository, times(1)).findByTitleSortByPrep("");
+        verifyNoMoreInteractions(recipeRepository);
+    }
+    
+    @Test
+    @WithMockUser(username = "testUser", roles = "USER")
+    public void testGetFavoritesUsers() throws Exception {
+        // Mock data
+        Recipe recipe = new Recipe(1, "Spaghetti Bolognese", 30, "Ground beef, tomatoes, pasta", "Cook the beef, add tomatoes, mix with pasta", "image_url_1", new User(), new ArrayList<>());
+        Favorites favorite1 = new Favorites(1, new User(), recipe);
+        Favorites favorite2 = new Favorites(2, new User(), recipe);
+        recipe.setFavorites(Arrays.asList(favorite1, favorite2));
+
+        // Mock RecipeRepository response
+        when(recipeRepository.findById(anyInt())).thenReturn(Optional.of(recipe));
+
+        // Perform the GET request
+        MvcResult result = mvc.perform(get("/api/recipes/favorites/users/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // Parse JSON manually
+        String jsonResponse = result.getResponse().getContentAsString();
+        JSONArray jsonArray = new JSONArray(jsonResponse);
+        
+     // Your assertions on jsonArray
+        assertThat(jsonArray.length()).isEqualTo(recipe.getFavorites().size());
+
+        JSONObject user1 = jsonArray.getJSONObject(0);
+        assertThat(user1.opt("userId")).isEqualTo(favorite1.getUser().getUserId());
+
+        JSONObject user2 = jsonArray.getJSONObject(1);
+        assertThat(user2.opt("userId")).isEqualTo(favorite2.getUser().getUserId());
+
+
+
+        // Verify interactions with RecipeRepository
+        verify(recipeRepository, times(1)).findById(1);
+        verifyNoMoreInteractions(recipeRepository);
+    }
+
+
     
 //    @Test
 //    @WithMockUser(username = "testUser", roles = "USER")
