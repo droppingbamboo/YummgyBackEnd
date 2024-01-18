@@ -15,13 +15,15 @@ CREATE TABLE users (
 );
 
 insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('BrionneB', "CogniJump23", "ROLE_USER", true, false, false, true);
+	values('BrionneB', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_USER", true, false, false, true);
 insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('BryanD', "CogniJump23", "ROLE_USER", false, true, false, true);
+	values('BryanD', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_USER", false, true, false, true);
 insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('AbdulM', "CogniJump23", "ROLE_ADMIN", false, false, true, true);
+	values('AbdulM', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", false, false, true, true);
 insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('GrantS', "CogniJump23", "ROLE_ADMIN", false, false, false, false);
+	values('GrantS', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", false, false, false, false);
+insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
+	values('admin', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", false, false, false, true);
 
 CREATE TABLE recipe (
     recipe_id INT PRIMARY KEY 
