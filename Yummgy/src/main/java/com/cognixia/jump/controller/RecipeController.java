@@ -307,7 +307,7 @@ public class RecipeController {
 		}
 		recipe.setFavorites(found.get().getFavorites());
 		recipe.setAuthor(found.get().getAuthor());
-		recipe.setFavoriteCount(0);
+		recipe.setFavoriteCount(found.get().getFavoriteCount());
 		
 		Recipe updated = repo.save(recipe);
 		
@@ -335,6 +335,7 @@ public class RecipeController {
 		
 		recipe.setFavorites(found.get().getFavorites());
 		recipe.setAuthor(found.get().getAuthor());
+		recipe.setFavoriteCount(found.get().getFavoriteCount());
 		
 		Recipe updated = repo.save(recipe);
 		
