@@ -60,7 +60,7 @@ public class RecipeController {
 	
 	@Operation(summary = "Search recipies by all imaginable ways.",
 			description = "Searches recipes using 4 determinants. ordering determines the value by which the search is ordered (must be stated in"
-					+ " a camel case format eg. favoriteCount. Ascending, which if ASC gives results in ascending order by the ordering passed"
+					+ " a camel case format eg. title, recipeId, prepTime, favoriteCount. Ascending, which if ASC gives results in ascending order by the ordering passed"
 					+ ", and descending if DESC passed. amount determines the number of results desired. search is the desired query to search through"
 					+ " titles for.")
 	@ApiResponses({
