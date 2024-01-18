@@ -215,7 +215,7 @@ public class RecipeController {
 		{
 			throw new UrlNotAnImageException(newRecipe.getFoodImageUrl());
 		}
-		
+		newRecipe.setFavoriteCount(0);
 		Recipe added = repo.save(newRecipe);
 		
 		return ResponseEntity.status(201).body(added);
@@ -307,6 +307,7 @@ public class RecipeController {
 		}
 		recipe.setFavorites(found.get().getFavorites());
 		recipe.setAuthor(found.get().getAuthor());
+		recipe.setFavoriteCount(0);
 		
 		Recipe updated = repo.save(recipe);
 		
