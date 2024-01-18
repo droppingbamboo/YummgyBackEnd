@@ -2,59 +2,60 @@ package com.cognixia.jump.controller;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.aspectj.lang.annotation.Before;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.http.HttpHeaders;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.web.server.csrf.CsrfToken;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-
+import com.cognixia.jump.filter.JwtRequestFilter;
 import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.Recipe;
 import com.cognixia.jump.model.User;
+import com.cognixia.jump.model.User.Role;
 import com.cognixia.jump.repository.UserRepository;
-import com.cognixia.jump.service.MyUserDetails;
 import com.cognixia.jump.service.MyUserDetailsService;
 import com.cognixia.jump.util.JwtUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
 
 @WebMvcTest(UserController.class)
 public class UserContollerTest {
@@ -71,9 +72,22 @@ public class UserContollerTest {
 
     @MockBean
     private JwtUtil jwtUtil;
+
     
     @MockBean
     private MyUserDetailsService userDetailsService;
+    
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @BeforeEach
+    public void setup(TestInfo testInfo)
+    {
+        // Print the name of the test being run
+        System.out.println("-------------RUNNING TEST--------- : " + testInfo.getTestMethod().get().getName());
+    	//Init MockMvc Object and build
+        mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
 
     @Test
     @WithMockUser(username = "testUser", password = "testPassword")
@@ -135,7 +149,35 @@ public class UserContollerTest {
         verify(userRepository, times(1)).findById(1);
         verifyNoMoreInteractions(userRepository);
     }
-    
+    @Test
+    @WithMockUser(username = "testUser", password = "testPassword", roles = "ADMIN")
+    public void testToggleEnabled() throws Exception {
+        // Mock data
+        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+        testUser.setRole(Role.ROLE_ADMIN);       
+        testUser.setEnabled(true);  // Set initial enabled status
+
+        // Mock UserRepository response
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+
+        // Perform the PATCH request
+        MvcResult result = mvc.perform(patch("/api/admin/user/security/enabled/1").header("Authorization", "Bearer test-token"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // Parse JSON manually
+        String jsonResponse = result.getResponse().getContentAsString();
+
+        // Your assertions on jsonResponse
+        assertThat(jsonResponse).isEqualTo("false");  // Assuming toggling sets to false in this case
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).findById(1);
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoMoreInteractions(userRepository);
+    }
     @Test
     @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
     public void testGetUserRecipes() throws Exception {
@@ -217,58 +259,85 @@ public class UserContollerTest {
         verifyNoMoreInteractions(userRepository);
     }
 
+    @Test
+    @WithMockUser(username = "testUser", password = "testPassword")
+    public void testGetLoggedInUser() throws Exception {
+        // Mock data
+        User loggedInUser = new User(12, "John", "testPassword", new ArrayList<>(), new ArrayList<>());
 
-//    @Test
-//    @WithMockUser(username = "testUser", roles = "USER")
-//    public void testAddUser() throws Exception {
-//        // Mock data
-//        User newUser = new User();
-//        newUser.setUserId(null);  // Setting userId to null to simulate a new user
-//        newUser.setYumUsername("John Doo");
-//        newUser.setYumPassword("pass123");
-//
-//        // Mock UserRepository response
-//        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-//            User savedUser = invocation.getArgument(0);
-//            savedUser.setUserId(11);  // Assigning a userId to simulate the saved user
-//            return savedUser;
-//        });
-//
-//        // Perform the POST request
-//        mvc.perform(post("/api/add/user")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .content(asJsonString(newUser)))  // Use your asJsonString method
-//                .andExpect(status().isCreated())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-//                .andExpect(jsonPath("$.userId").value(11))  // Check for the assigned userId
-//                .andExpect(jsonPath("$.yumUsername").value("John Doo"))
-//                .andExpect(jsonPath("$.yumPassword").doesNotExist());  // Ensure yumPassword is not returned
-//
-//        // Verify interactions with UserRepository
-//        verify(userRepository, times(1)).save(any(User.class));
-//        verifyNoMoreInteractions(userRepository);
-//    }
+        // Mock JwtUtil behavior
+        when(jwtUtil.getLoggedInUser("test-token")).thenReturn(loggedInUser);
+
+        // Perform the GET request
+        MvcResult result = mvc.perform(get("/api/users/loggedin").header("Authorization", "test-token"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Get the response content
+        String jsonResponse = result.getResponse().getContentAsString();
+
+        // Apply JSON path assertions or other relevant assertions
+
+        // Verify interactions with JwtUtil
+        verify(jwtUtil, times(1)).getLoggedInUser("test-token");
+        verifyNoMoreInteractions(jwtUtil);
+    }
+
+
+
+
+    @Test
+    @WithMockUser(username = "testUser", roles = "ADMIN")
+    public void testAddUser() throws Exception {
+        // Mock data
+        User newUser = new User();
+        newUser.setRole(Role.ROLE_USER);
+        newUser.setUserId(1);  // Setting userId to null to simulate a new user
+        newUser.setYumUsername("John Doo");
+        newUser.setYumPassword("pass123");
+
+        // Mock UserRepository response
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User savedUser = invocation.getArgument(0);
+            savedUser.setUserId(1);  // Assigning a userId to simulate the saved user
+            return savedUser;
+        });
+ //       System.out.println(newUser.toJson());
+        // Perform the POST request
+        mvc.perform(post("/api/add/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content((newUser.toJson())))  // Use your asJsonString method
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.userId").value(1))  // Check for the assigned userId
+                .andExpect(jsonPath("$.yumUsername").value("John Doo"))
+                .andExpect(jsonPath("$.yumPassword").doesNotExist());  // Ensure yumPassword is not returned
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).save(any(User.class));
+        verifyNoMoreInteractions(userRepository);
+    }
 //    
-//    @Test
-//    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
-//    public void testDeleteUser() throws Exception {
-//        // Mock data
-//        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
-//
-//        // Mock UserRepository response
-//        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
-//        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
-//
-//        // Perform the DELETE request
-//        mvc.perform(delete("/api/delete/user/1").header("Authorization", "Bearer test-token"))
-//                .andExpect(status().isOk());
-//
-//        // Verify interactions with UserRepository
-//        verify(userRepository, times(1)).findById(1);
-//        verify(userRepository, times(1)).deleteById(1);
-//        verify(jwtUtil, times(1)).getLoggedInUser("test-token");
-//        verifyNoMoreInteractions(userRepository, jwtUtil);
-//    }
+    @Test
+    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
+    public void testDeleteUser() throws Exception {
+        // Mock data
+        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+
+        // Mock UserRepository response
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
+        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
+
+        // Perform the DELETE request
+        mvc.perform(delete("/api/delete/user/1").header("Authorization", "test-token"))
+                .andExpect(status().isOk());
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).findById(1);
+        verify(userRepository, times(1)).deleteById(1);
+        verify(jwtUtil, times(1)).getLoggedInUser("test-token");
+        verifyNoMoreInteractions(userRepository, jwtUtil);
+    }
 //    
 //    @Test
 //    @WithMockUser(username = "testUser", roles = "USER")
@@ -278,25 +347,32 @@ public class UserContollerTest {
 //        testUser.setUserId(1);  // Set a valid user ID
 //        testUser.setYumUsername("testUser");
 //        testUser.setYumPassword("password");
-//        
+//
 //        // Mock the JwtUtil behavior
 //        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
 //
-//        // Mock the repository response for favorites (an empty list)
+//        // Mock the repository response for favorites
 //        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
 //
-//        // Perform the request
-//        mvc.perform(get("/api/users/favorites").header("Authorization", "Bearer token123"))
+//        // Perform the GET request
+//        MvcResult result = mvc.perform(MockMvcRequestBuilders.get("/api/users/favorites")
+//                .header("Authorization", "Bearer token123")
+//                .contentType(MediaType.APPLICATION_JSON))
 //                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))  // Ensure content type is set
-//                .andExpect(content().json("[]"));  // Verify that the response body is an empty list (no favorites)
-//        
+//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+//                .andReturn();
+//
 //        // Verify interactions
 //        verify(jwtUtil, times(1)).getLoggedInUser(anyString());
-//        verifyNoMoreInteractions(jwtUtil);
 //        verify(userRepository, times(1)).findById(anyInt());
-//        verifyNoMoreInteractions(userRepository);
+//        verifyNoMoreInteractions(jwtUtil, userRepository);
+//
+//        // Your assertions on the result
+//        // For example, you can parse the JSON manually and perform assertions
+//        String jsonResponse = result.getResponse().getContentAsString();
+//        // Your assertions on jsonResponse
 //    }
+
 //    @Test
 //    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
 //    public void testGetLoggedInUserRecipes() throws Exception {
