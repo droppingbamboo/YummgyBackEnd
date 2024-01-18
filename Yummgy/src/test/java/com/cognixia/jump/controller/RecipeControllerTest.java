@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,6 +35,8 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -101,113 +104,6 @@ public class RecipeControllerTest {
     	//Init MockMvc Object and build
         mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
-	    
-    @Test
-    @WithMockUser(username = "testUser", roles = "USER")
-    public void testGetRecipes() throws Exception {
-        String uri = STARTING_URI + "/recipes/search/";
-
-        // Mock data
-        Recipe recipe1 = new Recipe(1, "Spaghetti Bolognese", 30, "Ground beef, tomatoes, pasta", "Cook the beef, add tomatoes, mix with pasta", "image_url_1", new User(), new ArrayList<>());
-        Recipe recipe2 = new Recipe(2, "Chicken Alfredo", 25, "Chicken, Alfredo sauce, pasta", "Cook the chicken, add Alfredo sauce, mix with pasta", "image_url_2", new User(), new ArrayList<>());
-
-        List<Recipe> recipes = Arrays.asList(recipe1, recipe2);
-
-        // Mock RecipeRepository response
-        when(recipeRepository.findAll()).thenReturn(recipes);
-
-        // Perform the GET request
-        mvc.perform(get(uri))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.length()").value(recipes.size()))
-                .andExpect(jsonPath("$[0].recipeId").value(recipe1.getRecipeId()))
-                .andExpect(jsonPath("$[0].title").value(recipe1.getTitle()))
-                .andExpect(jsonPath("$[0].prepTime").value(recipe1.getPrepTime()))
-                .andExpect(jsonPath("$[0].ingredients").value(recipe1.getIngredients()))
-                .andExpect(jsonPath("$[0].directions").value(recipe1.getDirections()))
-                .andExpect(jsonPath("$[0].foodImageUrl").value(recipe1.getFoodImageUrl()))
-                .andExpect(jsonPath("$[1].recipeId").value(recipe2.getRecipeId()))
-                .andExpect(jsonPath("$[1].title").value(recipe2.getTitle()))
-                .andExpect(jsonPath("$[1].prepTime").value(recipe2.getPrepTime()))
-                .andExpect(jsonPath("$[1].ingredients").value(recipe2.getIngredients()))
-                .andExpect(jsonPath("$[1].directions").value(recipe2.getDirections()))
-                .andExpect(jsonPath("$[1].foodImageUrl").value(recipe2.getFoodImageUrl()));
-
-        // Verify interactions with RecipeRepository
-        verify(recipeRepository, times(1)).findAll();
-        verifyNoMoreInteractions(recipeRepository);
-    }
-    
-    @Test
-    @WithMockUser(username = "testUser", roles = "USER")
-    public void testGetLatestRecipesByAmount() throws Exception {
-        String uri = STARTING_URI + "/recipes/latest/{amount}";
-        int amount = 5; // Set the desired amount for testing
-
-        // Mock data
-        Recipe recipe1 = new Recipe(1, "Spaghetti Bolognese", 30, "Ground beef, tomatoes, pasta", "Cook the beef, add tomatoes, mix with pasta", "image_url_1", new User(), new ArrayList<>());
-        Recipe recipe2 = new Recipe(2, "Chicken Alfredo", 25, "Chicken, Alfredo sauce, pasta", "Cook the chicken, add Alfredo sauce, mix with pasta", "image_url_2", new User(), new ArrayList<>());
-
-        List<Recipe> latestRecipes = Arrays.asList(recipe1, recipe2);
-
-        // Mock RecipeRepository response
-        when(recipeRepository.latestRecipesByAmount(amount)).thenReturn(latestRecipes);
-
-        // Perform the GET request
-        mvc.perform(get(uri, amount))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.length()").value(latestRecipes.size()))
-                .andExpect(jsonPath("$[0].recipeId").value(recipe1.getRecipeId()))
-                .andExpect(jsonPath("$[0].title").value(recipe1.getTitle()))
-                .andExpect(jsonPath("$[0].prepTime").value(recipe1.getPrepTime()))
-                .andExpect(jsonPath("$[0].ingredients").value(recipe1.getIngredients()))
-                .andExpect(jsonPath("$[0].directions").value(recipe1.getDirections()))
-                .andExpect(jsonPath("$[0].foodImageUrl").value(recipe1.getFoodImageUrl()))
-                .andExpect(jsonPath("$[1].recipeId").value(recipe2.getRecipeId()))
-                .andExpect(jsonPath("$[1].title").value(recipe2.getTitle()))
-                .andExpect(jsonPath("$[1].prepTime").value(recipe2.getPrepTime()))
-                .andExpect(jsonPath("$[1].ingredients").value(recipe2.getIngredients()))
-                .andExpect(jsonPath("$[1].directions").value(recipe2.getDirections()))
-                .andExpect(jsonPath("$[1].foodImageUrl").value(recipe2.getFoodImageUrl()));
-
-        // Verify interactions with RecipeRepository
-        verify(recipeRepository, times(1)).latestRecipesByAmount(amount);
-        verifyNoMoreInteractions(recipeRepository);
-    }
-    
-    @Test
-    @WithMockUser(username = "testUser", roles = "USER")
-    public void testSearchRecipeTitles() throws Exception {
-        String uri = STARTING_URI + "/recipes/search/{search}";
-        String searchTerm = "Spaghetti"; // Set the desired search term for testing
-
-        // Mock data
-        Recipe recipe1 = new Recipe(1, "Spaghetti Bolognese", 30, "Ground beef, tomatoes, pasta", "Cook the beef, add tomatoes, mix with pasta", "image_url_1", new User(), new ArrayList<>());
-        Recipe recipe2 = new Recipe(2, "Chicken Alfredo", 25, "Chicken, Alfredo sauce, pasta", "Cook the chicken, add Alfredo sauce, mix with pasta", "image_url_2", new User(), new ArrayList<>());
-
-        List<Recipe> matchingRecipes = Collections.singletonList(recipe1);
-
-        // Mock RecipeRepository response
-        when(recipeRepository.findByTitleContaining(searchTerm)).thenReturn(matchingRecipes);
-
-        // Perform the GET request
-        mvc.perform(get(uri, searchTerm))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.length()").value(matchingRecipes.size()))
-                .andExpect(jsonPath("$[0].recipeId").value(recipe1.getRecipeId()))
-                .andExpect(jsonPath("$[0].title").value(recipe1.getTitle()))
-                .andExpect(jsonPath("$[0].prepTime").value(recipe1.getPrepTime()))
-                .andExpect(jsonPath("$[0].ingredients").value(recipe1.getIngredients()))
-                .andExpect(jsonPath("$[0].directions").value(recipe1.getDirections()))
-                .andExpect(jsonPath("$[0].foodImageUrl").value(recipe1.getFoodImageUrl()));
-
-        // Verify interactions with RecipeRepository
-        verify(recipeRepository, times(1)).findByTitleContaining(searchTerm);
-        verifyNoMoreInteractions(recipeRepository);
-    }
     
     @Test
     @WithMockUser(username = "testUser", roles = "USER")
@@ -264,52 +160,47 @@ public class RecipeControllerTest {
         verify(recipeRepository, times(1)).findById(recipeId);
         verifyNoMoreInteractions(recipeRepository);
     }
+    
     @Test
     @WithMockUser(username = "testUser", roles = "USER")
-    public void testSearchRecipeTitlesByPrepTime() throws Exception {
-        // Mock data
+    public void testSearchRecipes() throws Exception {
+    	// Mock data
         List<Recipe> recipes = Arrays.asList(
                 new Recipe(1, "Recipe 1", 30, "Ingredients 1", "Directions 1", null, new User(), new ArrayList<>()),
                 new Recipe(2, "Recipe 2", 45, "Ingredients 2", "Directions 2", null, new User(), new ArrayList<>())
         );
-
-        // Mock RecipeRepository response
-        when(recipeRepository.findByTitleSortByPrep(anyString())).thenReturn(recipes);
-
-        // Perform the GET request
-        mvc.perform(get("/api/recipes/search/preptime/{search}", "30"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.length()").value(recipes.size()))
-                .andExpect(jsonPath("$[0].recipeId").value(recipes.get(0).getRecipeId()))
-                .andExpect(jsonPath("$[1].recipeId").value(recipes.get(1).getRecipeId()));
-
-        // Verify interactions with RecipeRepository
-        verify(recipeRepository, times(1)).findByTitleSortByPrep("30");
-        verifyNoMoreInteractions(recipeRepository);
-    }
-    @Test
-    @WithMockUser(username = "testUser", roles = "USER")
-    public void testGetRecipesPrepTime() throws Exception {
-        // Mock data
-        List<Recipe> recipes = Arrays.asList(
-                new Recipe(1, "Recipe 1", 30, "Ingredients 1", "Directions 1", null, new User(), new ArrayList<>()),
+        
+        List<Recipe> recipes2 = Arrays.asList(
                 new Recipe(2, "Recipe 2", 45, "Ingredients 2", "Directions 2", null, new User(), new ArrayList<>())
         );
-
-        // Mock RecipeRepository response
-        when(recipeRepository.findByTitleSortByPrep(anyString())).thenReturn(recipes);
-
-        // Perform the GET request
-        mvc.perform(get("/api/recipes/search/preptime/"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.length()").value(recipes.size()))
-                .andExpect(jsonPath("$[0].recipeId").value(recipes.get(0).getRecipeId()))
-                .andExpect(jsonPath("$[1].recipeId").value(recipes.get(1).getRecipeId()));
-
-        // Verify interactions with RecipeRepository
-        verify(recipeRepository, times(1)).findByTitleSortByPrep("");
+        
+        Sort sortAscId = Sort.by(Sort.Direction.ASC, "title");
+        Sort sortDescId = Sort.by(Sort.Direction.DESC, "prepTime");
+        when(recipeRepository.findByTitleContaining(anyString(), eq(sortAscId), eq(Limit.of(2)))).thenReturn(recipes);
+        when(recipeRepository.findByTitleContaining(anyString(), eq(sortDescId), eq(Limit.of(1)))).thenReturn(recipes2);
+        
+        mvc.perform(get("/api/recipes/search/{ordering}/{ascending}/{amount}/{search}", "title", "ASC", "2","Recipe"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(jsonPath("$.length()").value(recipes.size()))
+        .andExpect(jsonPath("$[0].recipeId").value(recipes.get(0).getRecipeId()))
+        .andExpect(jsonPath("$[1].recipeId").value(recipes.get(1).getRecipeId()));
+        
+        mvc.perform(get("/api/recipes/search/{ordering}/{ascending}/{amount}/{search}", "prepTime", "DESC", "1","Recipe"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(jsonPath("$.length()").value(recipes2.size()))
+        .andExpect(jsonPath("$[0].recipeId").value(recipes2.get(0).getRecipeId()));
+        
+        mvc.perform(get("/api/recipes/search/{ordering}/{ascending}/{amount}/", "prepTime", "DESC", "1"))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+        .andExpect(jsonPath("$.length()").value(recipes2.size()))
+        .andExpect(jsonPath("$[0].recipeId").value(recipes2.get(0).getRecipeId()));
+        
+        verify(recipeRepository, times(1)).findByTitleContaining("Recipe", sortAscId, Limit.of(2));
+        verify(recipeRepository, times(1)).findByTitleContaining("Recipe", sortDescId, Limit.of(1));
+        verify(recipeRepository, times(1)).findByTitleContaining("", sortDescId, Limit.of(1));
         verifyNoMoreInteractions(recipeRepository);
     }
     
