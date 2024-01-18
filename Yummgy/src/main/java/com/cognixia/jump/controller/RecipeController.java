@@ -360,7 +360,8 @@ public class RecipeController {
 			{
 				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
 				favoritesRepo.deleteFavorite(deleteItem.getFavoritesId());
-				
+				found.get().setFavoriteCount(found.get().getFavoriteCount() - 1);
+				repo.save(found.get());
 				return ResponseEntity.status(200).body("Unfavorited");
 			}
 			else
@@ -392,11 +393,7 @@ public class RecipeController {
 			Favorites fav = new Favorites(null, jwtUtil.getLoggedInUser(token), found.get());
 			if(found.get().getFavorites().contains(fav))
 			{
-				Favorites deleteItem = found.get().getFavorites().get(found.get().getFavorites().indexOf(fav));
-				favoritesRepo.deleteById(deleteItem.getFavoritesId());
-				found.get().setFavoriteCount(found.get().getFavoriteCount() - 1);
-				repo.save(found.get());
-				return ResponseEntity.status(200).body("Unfavorited");
+				return ResponseEntity.status(400).body("Already Favorited");
 			}
 			found.get().setFavoriteCount(found.get().getFavoriteCount() + 1);
 			favoritesRepo.save(fav);
