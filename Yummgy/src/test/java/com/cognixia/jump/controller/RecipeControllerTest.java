@@ -26,7 +26,9 @@ import java.util.Optional;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -85,6 +89,18 @@ public class RecipeControllerTest {
 	    
     @MockBean
     private MyUserDetailsService userDetailsService;
+    
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @BeforeEach
+    public void setup(TestInfo testInfo)
+    {
+        // Print the name of the test being run
+        System.out.println("-------------RUNNING TEST--------- : " + testInfo.getTestMethod().get().getName());
+    	//Init MockMvc Object and build
+        mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+    }
 	    
     @Test
     @WithMockUser(username = "testUser", roles = "USER")
