@@ -337,8 +337,15 @@ public class RecipeController {
 		
 		Optional<Recipe> found = repo.findById(recipe.getRecipeId());
 		
+		Pattern pat = Pattern.compile(".*?(jpeg|png|jpg)");
+		Matcher match = pat.matcher(recipe.getFoodImageUrl());
+		
 		if(found.isEmpty()) {
 			throw new ResourceNotFoundException("recipe", recipe.getRecipeId());
+		}
+		else if(!match.find() && ((found.get().getFoodImageUrl() != null) && (found.get().getFoodImageUrl() != "")))
+		{
+			throw new UrlNotAnImageException(recipe.getFoodImageUrl());
 		}
 		
 		recipe.setFavorites(found.get().getFavorites());
