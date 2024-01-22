@@ -4,6 +4,7 @@ package com.cognixia.jump.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -265,9 +267,41 @@ public class UserContollerTest {
         verify(userRepository, times(1)).save(any(User.class));
         verifyNoMoreInteractions(userRepository);
     }
+    
+    // USER ADD ADMIN IMPROPER FORMAT TEST
+    @Test
+    @WithMockUser(username = "testUser", roles = "ADMIN")
+    public void testAddAdminUserImproperFormat() throws Exception {
+        // Mock data with missing required fields
+        User newUser = new User();
 
+        // Perform the POST request
+        mvc.perform(post("/api/admin/add/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(newUser)))  // Use your asJsonString method
+                .andExpect(status().isBadRequest());  // Expecting a 400 Bad Request status
 
-    						//ADD USER TEST
+        // Verify no interactions with UserRepository
+        verifyNoMoreInteractions(userRepository);
+    }
+    
+ // USER NOT ADMIN TEST
+    @Test
+    public void testAddAdminUserNotAdmin() throws Exception {
+        // Mock data with missing required fields
+        User newUser = new User();
+        newUser.setRole(Role.ROLE_USER);       
+        // Perform the POST request
+        mvc.perform(post("/api/admin/add/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(newUser)))  // Use your asJsonString method
+                .andExpect(status().isForbidden());  // Expecting a 403 Forbidden status
+
+        // Verify no interactions with UserRepository
+        verifyNoInteractions(userRepository);
+    }
+
+    //ADD USER TEST
     @Test
     @WithMockUser(username = "testUser", roles = "ADMIN")
     public void testAddUser() throws Exception {
@@ -301,11 +335,30 @@ public class UserContollerTest {
         verifyNoMoreInteractions(userRepository);
     }
     
+    						// ADD USER IMPROPER FORMAT TEST
+    @Test
+    @WithMockUser(username = "testUser", roles = "ADMIN")
+    public void testAddUserImproperFormat() throws Exception {
+        // Mock data with missing required fields
+        User newUser = new User();
+
+        // Perform the POST request
+        mvc.perform(post("/api/add/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(asJsonString(newUser)))  // Use your asJsonString method
+                .andExpect(status().isBadRequest());  // Expecting a 400 Bad Request status
+
+        // Verify no interactions with UserRepository
+        verifyNoMoreInteractions(userRepository);
+    }
+
+    
     
     						//DELETE USER TEST    
     @Test
     @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
     public void testDeleteUser() throws Exception {
+
         // Mock data
         User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
 
@@ -323,7 +376,26 @@ public class UserContollerTest {
         verify(jwtUtil, times(1)).getLoggedInUser("test-token");
         verifyNoMoreInteractions(userRepository, jwtUtil);
     }
-  
+
+    @Test
+    @WithMockUser(username = "testUser", password = "testPassword", roles = "USER")
+    public void testDeleteUserInvalidId() throws Exception {
+        User testUser = new User(1, "testUser", "testPassword", new ArrayList<>(), new ArrayList<>());
+
+        // Mock UserRepository response
+        when(userRepository.findById(anyInt())).thenReturn(Optional.of(testUser));
+        when(jwtUtil.getLoggedInUser(anyString())).thenReturn(testUser);
+
+        // Perform the DELETE request with an invalid user ID
+        mvc.perform(delete("/api/delete/user/999").header("Authorization", "test-token"))
+                .andExpect(status().isBadRequest());  // Expecting a 400 Bad Request status
+
+        // Verify interactions with UserRepository
+        verify(userRepository, times(1)).findById(999);  // Check for the provided invalid user ID
+        verifyNoMoreInteractions(userRepository, jwtUtil);
+    }
+
+
     						//LOGGED IN TESTS
     @Test
     @WithMockUser(username = "testUser", password = "testPassword")
