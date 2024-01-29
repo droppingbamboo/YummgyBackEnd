@@ -8,22 +8,23 @@ CREATE TABLE users (
     yum_username VARCHAR(255) UNIQUE NOT NULL,    
     yum_password VARCHAR(255) NOT NULL,
 	role ENUM ("ROLE_USER", "ROLE_ADMIN"),
+    email VARCHAR(255) UNIQUE NOT NULL,
     expired boolean,
     locked boolean,
     credentials_bad boolean,
     enabled boolean
 );
 
-insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('BrionneB', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_USER", true, false, false, true);
-insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('BryanD', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_USER", false, true, false, true);
-insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('AbdulM', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", false, false, true, true);
-insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('GrantS', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", false, false, false, false);
-insert into users(yum_username, yum_password, role, expired, locked, credentials_bad, enabled) 
-	values('admin', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", false, false, false, true);
+insert into users(yum_username, yum_password, role, email, expired, locked, credentials_bad, enabled) 
+	values('BrionneB', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_USER", "brionneb7354453@gmail.com", true, false, false, true);
+insert into users(yum_username, yum_password, role, email, expired, locked, credentials_bad, enabled) 
+	values('BryanD', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_USER", "bryand7354453@gmail.com", false, true, false, true);
+insert into users(yum_username, yum_password, role, email, expired, locked, credentials_bad, enabled) 
+	values('AbdulM', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", "abdulm7354453@gmail.com", false, false, true, true);
+insert into users(yum_username, yum_password, role, email, expired, locked, credentials_bad, enabled) 
+	values('GrantS', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", "grants7354453@gmail.com", false, false, false, false);
+insert into users(yum_username, yum_password, role, email, expired, locked, credentials_bad, enabled) 
+	values('admin', "$2y$10$fUhaOp4zPU.LCF9NXdfTUuPRCDKu4EQhWvmRBtHGYcgbe8nOD4Zyi", "ROLE_ADMIN", "yumggyadmin@gmail.com", false, false, false, true);
 
 CREATE TABLE recipe (
     recipe_id INT PRIMARY KEY 

@@ -50,6 +50,8 @@ public class User implements Serializable{
 	@Column(nullable = false)
 	private Role role;
 	
+	private String email;
+	
 	@Column(columnDefinition = "boolean default false")
 	private boolean expired;
 	
@@ -74,13 +76,14 @@ public class User implements Serializable{
 		
 	}
 	public User(Integer userId, @NotBlank String yumUsername, @NotBlank String yumPassword, List<Recipe> recipes,
-			List<Favorites> favorites) {
+			List<Favorites> favorites, String email) {
 		super();
 		this.userId = userId;
 		this.yumUsername = yumUsername;
 		this.yumPassword = yumPassword;
 		this.recipes = recipes;
 		this.favorites = favorites;
+		this.email = email;
 	}
 
 	public Integer getUserId() {

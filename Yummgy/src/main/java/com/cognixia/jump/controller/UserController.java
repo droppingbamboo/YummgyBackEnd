@@ -121,7 +121,7 @@ public class UserController {
 		
 		newUser.setExpired(false);
 		
-		User added = repo.save(newUser); 
+		User added = repo.save(newUser);
 		
 		return ResponseEntity.status(201).body(added);
 	}
@@ -147,7 +147,7 @@ public class UserController {
 		
 		User added = repo.save(newUser);
 		
-		newUser.setRole(Role.ROLE_ADMIN);
+		newUser.setRole(Role.ROLE_USER);
 		
 		newUser.setEnabled(true);
 		
