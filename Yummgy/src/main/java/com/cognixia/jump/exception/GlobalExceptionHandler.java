@@ -58,4 +58,31 @@ public class GlobalExceptionHandler {
 		
 		return ResponseEntity.status(400).body(errorDetails);
 	}
+	
+	@ExceptionHandler(InvalidResourceFormatException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<?> invalidResourceFormat(InvalidResourceFormatException ex, WebRequest request)
+	{
+		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
+		
+		return ResponseEntity.status(400).body(errorDetails);
+	}
+	
+	@ExceptionHandler(AlreadyInUseException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<?> alreadyInUser(AlreadyInUseException ex, WebRequest request)
+	{
+		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
+		
+		return ResponseEntity.status(400).body(errorDetails);
+	}
+	
+	@ExceptionHandler(TokenExpiredException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ResponseEntity<?> tokenExpired(TokenExpiredException ex, WebRequest request)
+	{
+		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
+		
+		return ResponseEntity.status(400).body(errorDetails);
+	}
 }
