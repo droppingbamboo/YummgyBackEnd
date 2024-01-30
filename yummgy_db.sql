@@ -94,6 +94,17 @@ CREATE TABLE favorites (
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (recipe_id) REFERENCES recipe(recipe_id) ON DELETE CASCADE       
 );
+
+CREATE TABLE confirmation_token (
+    id INT PRIMARY KEY
+			AUTO_INCREMENT,
+    confirmed_at datetime(6),
+    created_at datetime(6) NOT NULL,
+	expires_at datetime(6) NOT NULL,
+    token VARCHAR(255) NOT NULL,
+	user_id INT,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
        
     
 #Insert User_show records
