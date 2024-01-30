@@ -73,7 +73,7 @@ public class RegistrationController {
                 )
         );
 
-        String link = "http://localhost:8080/api/registration/confirm?token=" + token;
+        String link = "http://localhost:3000/verification?token=" + token;
         emailSender.send(
                 request.getEmail(),
                 buildEmail(request.getYumUsername(), link));
@@ -83,9 +83,8 @@ public class RegistrationController {
 	
 	@CrossOrigin
 	@Transactional
-	@GetMapping("/registration/confirm")
-    public String confirmToken(@RequestParam String token) throws ResourceNotFoundException, AlreadyInUseException, TokenExpiredException {
-		System.out.println("CONFIRMATION!?!?!");
+	@PatchMapping("/registration/confirm")
+    public void confirmToken(@RequestParam String token) throws ResourceNotFoundException, AlreadyInUseException, TokenExpiredException {
         ConfirmationToken confirmationToken = confirmationTokenController.getToken(token)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("token"));
@@ -102,7 +101,7 @@ public class RegistrationController {
 
         confirmationTokenController.setConfirmedAt(token);
         userController.setEnabled(confirmationToken.getUser().getEmail());
-        return "confirmed";
+        return;
     }
 	
 	
