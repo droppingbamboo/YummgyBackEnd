@@ -140,6 +140,13 @@ public class UserController {
 			}
 		}
 		
+		boolean usernameUsed = repo.findByYumUsername(newUser.getYumUsername()).isPresent();
+		
+		if(usernameUsed)
+		{
+			throw new AlreadyInUseException("Username", newUser.getYumUsername());
+		}
+		
 		User added = repo.save(newUser);
 		
 		String token = UUID.randomUUID().toString();
