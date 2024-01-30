@@ -45,6 +45,11 @@ public class RegistrationController {
 	@Autowired
 	private EmailService emailSender;
 	
+	@Autowired
+	private UserRepository userRepo;
+	
+	
+	
 	@Operation(summary = "Add a user to the users table",
 			description = "Adds a user to the user table in the database based off a username and password."
 					+ "The password is encrypted before it is stored to ensure that passwords are secure.")
@@ -63,6 +68,8 @@ public class RegistrationController {
         if (!isValidEmail) {
             throw new InvalidResourceFormatException("Email", request.getEmail());
         }
+        
+        
 
         String token = userController.addUser(
                 	new User(

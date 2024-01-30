@@ -106,16 +106,7 @@ public class UserController {
 		String email = newUser.getEmail();
 		boolean emailUsed = repo.findByEmail(email).isPresent();
 		
-		if(emailUsed) {
-			if(!repo.findByEmail(email).get().isEnabled())
-			{
-				// resend confirmation email
-			}
-			else
-			{
-				throw new AlreadyInUseException("Email", email);
-			}
-		}
+		
 		
 		newUser.setUserId(null);
 		
@@ -130,6 +121,24 @@ public class UserController {
 		newUser.setCredentialsBad(false);
 		
 		newUser.setExpired(false);
+		
+		if(emailUsed) {
+			if(!repo.findByEmail(email).get().isEnabled())
+			{
+				
+				String token = UUID.randomUUID().toString();
+				
+				ConfirmationToken confirmationToken = new ConfirmationToken(token, LocalDateTime.now(), LocalDateTime.now().plusMinutes(15), repo.findByEmail(email).get());
+				
+				tokenController.saveConfirmationToken(confirmationToken);
+				
+				return token;
+			}
+			else
+			{
+				throw new AlreadyInUseException("Email", email);
+			}
+		}
 		
 		User added = repo.save(newUser);
 		
