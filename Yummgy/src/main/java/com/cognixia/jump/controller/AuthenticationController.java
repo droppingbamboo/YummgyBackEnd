@@ -55,11 +55,11 @@ public class AuthenticationController {
 					new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
 		} catch (BadCredentialsException e) {
-			throw new Exception("Incorrect username or password");
+			throw new BadCredentialsException("Incorrect username or password");
 		} catch (DisabledException e) {
-			throw new Exception("Account is disabled");
+			throw new DisabledException("Account is disabled");
 		} catch (LockedException e) {
-			throw new Exception("Account is locked");
+			throw new LockedException("Account is locked");
 		}
 
 

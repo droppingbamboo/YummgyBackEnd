@@ -14,5 +14,7 @@ public interface UserRepository extends JpaRepository<User, Integer>{
 	public Optional<User> findByYumUsername(String yumUsername);
 	
 	public List<User> findByYumUsernameContaining(String search);
+	
+	public Optional<User> findByEmail(String email);
 
 }

@@ -294,9 +294,13 @@ public class RecipeController {
 	)
 	@CrossOrigin
 	@PatchMapping("/patch/recipe")
-	public ResponseEntity<?> updateRecipe(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe recipe) throws ResourceNotFoundException {
+	public ResponseEntity<?> updateRecipe(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe recipe) throws ResourceNotFoundException, UrlNotAnImageException {
 		
 		Optional<Recipe> found = repo.findById(recipe.getRecipeId());
+		
+		
+		Pattern pat = Pattern.compile(".*?(jpeg|png|jpg)");
+		Matcher match = pat.matcher(recipe.getFoodImageUrl());
 		
 		if(found.isEmpty()) {
 			throw new ResourceNotFoundException("recipe", recipe.getRecipeId());
@@ -304,6 +308,10 @@ public class RecipeController {
 		if(!jwtUtil.getLoggedInUser(token).getRecipes().contains(found.get()))
 		{
 			return ResponseEntity.status(404).body("recipe not yours");
+		}
+		else if(!match.find() && ((found.get().getFoodImageUrl() != null) && (found.get().getFoodImageUrl() != "")))
+		{
+			throw new UrlNotAnImageException(recipe.getFoodImageUrl());
 		}
 		recipe.setFavorites(found.get().getFavorites());
 		recipe.setAuthor(found.get().getAuthor());
@@ -325,12 +333,19 @@ public class RecipeController {
 	)
 	@CrossOrigin
 	@PatchMapping("/admin/patch/recipe")
-	public ResponseEntity<?> updateRecipeAdmin(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe recipe) throws ResourceNotFoundException {
+	public ResponseEntity<?> updateRecipeAdmin(@RequestHeader (name="Authorization") String token, @Valid @RequestBody Recipe recipe) throws ResourceNotFoundException, UrlNotAnImageException {
 		
 		Optional<Recipe> found = repo.findById(recipe.getRecipeId());
 		
+		Pattern pat = Pattern.compile(".*?(jpeg|png|jpg)");
+		Matcher match = pat.matcher(recipe.getFoodImageUrl());
+		
 		if(found.isEmpty()) {
 			throw new ResourceNotFoundException("recipe", recipe.getRecipeId());
+		}
+		else if(!match.find() && ((found.get().getFoodImageUrl() != null) && (found.get().getFoodImageUrl() != "")))
+		{
+			throw new UrlNotAnImageException(recipe.getFoodImageUrl());
 		}
 		
 		recipe.setFavorites(found.get().getFavorites());
