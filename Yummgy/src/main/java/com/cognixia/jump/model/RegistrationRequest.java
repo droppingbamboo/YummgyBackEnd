@@ -2,9 +2,14 @@ package com.cognixia.jump.model;
 
 import java.util.Objects;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class RegistrationRequest {
+	@Schema(description="The username of a user", example="bomono3")
 	private String yumUsername;
+	@Schema(description="The password of a user sent for a registration request", example="hunter 2")
 	private final String yumPassword;
+	@Schema(description="The user's email", example="bomono8@gmail.com")
 	private final String email;
 	
 	public RegistrationRequest(String yumUsername, String yumPassword, String email) {

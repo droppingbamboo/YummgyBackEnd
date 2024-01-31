@@ -81,12 +81,12 @@ public class GlobalExceptionHandler {
 	}
 	
 	@ExceptionHandler(TokenExpiredException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ResponseStatus(HttpStatus.CONFLICT)
 	public ResponseEntity<?> tokenExpired(TokenExpiredException ex, WebRequest request)
 	{
 		ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
 		
-		return ResponseEntity.status(400).body(errorDetails);
+		return ResponseEntity.status(409).body(errorDetails);
 	}
 	
 	@ExceptionHandler(BadCredentialsException.class)

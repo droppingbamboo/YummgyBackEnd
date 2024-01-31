@@ -46,23 +46,29 @@ public class User implements Serializable{
 	@Column(nullable = false)
 	private String yumPassword;
 	
+	@Schema(description="The user's security role", example="ROLE_USER")
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Role role;
 	
+	@Schema(description="The user's email", example="bomono8@gmail.com")
 	@NotBlank
 	private String email;
 	
+	@Schema(description="The user's account's expiration status", example="false")
 	@Column(columnDefinition = "boolean default false")
 	private boolean expired;
 	
+	@Schema(description="The user's account's lock status", example="false")
 	@Column(columnDefinition = "boolean default false")
 	private boolean locked;
 	
+	@Schema(description="The user's account's credentials status", example="false")
 	@Column(columnDefinition = "boolean default false")
 	private boolean credentialsBad;
 	
-	@Column(columnDefinition = "boolean default true")
+	@Schema(description="The user's account's enabled status", example="false")
+	@Column(columnDefinition = "boolean default false")
 	private boolean enabled;
 	
 	@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
