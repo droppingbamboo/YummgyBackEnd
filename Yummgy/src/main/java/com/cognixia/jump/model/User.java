@@ -188,6 +188,7 @@ public class User implements Serializable{
 	    return "{\"userId\" : " + userId
 	            + ", \"yumUsername\" : \"" + yumUsername + "\""
 	            + ", \"yumPassword\" : \"" + yumPassword + "\""
+	            + ", \"email\" : \"" + email + "\""
 	            // Add other fields as needed...
 	            + "}";
 	}
