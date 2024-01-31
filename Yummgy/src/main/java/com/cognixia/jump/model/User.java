@@ -50,6 +50,9 @@ public class User implements Serializable{
 	@Column(nullable = false)
 	private Role role;
 	
+	@NotBlank
+	private String email;
+	
 	@Column(columnDefinition = "boolean default false")
 	private boolean expired;
 	
@@ -74,15 +77,24 @@ public class User implements Serializable{
 		
 	}
 	public User(Integer userId, @NotBlank String yumUsername, @NotBlank String yumPassword, List<Recipe> recipes,
-			List<Favorites> favorites) {
+			List<Favorites> favorites, String email) {
 		super();
 		this.userId = userId;
 		this.yumUsername = yumUsername;
 		this.yumPassword = yumPassword;
 		this.recipes = recipes;
 		this.favorites = favorites;
+		this.email = email;
 	}
 
+	public User(@NotBlank(message = "Username cannot be blank") String yumUsername, @NotBlank String yumPassword,
+			Role role, @NotBlank String email) {
+		super();
+		this.yumUsername = yumUsername;
+		this.yumPassword = yumPassword;
+		this.role = role;
+		this.email = email;
+	}
 	public Integer getUserId() {
 		return userId;
 	}
@@ -130,6 +142,14 @@ public class User implements Serializable{
 	
 	public void setRole(Role role) {
 		this.role = role;
+	}
+	
+	public String getEmail() {
+		return email;
+	}
+	
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	
 	public boolean isExpired() {

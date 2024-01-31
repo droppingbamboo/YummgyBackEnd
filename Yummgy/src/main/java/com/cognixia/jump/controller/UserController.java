@@ -1,7 +1,9 @@
 package com.cognixia.jump.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cognixia.jump.exception.AlreadyInUseException;
 import com.cognixia.jump.exception.ResourceNotFoundException;
+import com.cognixia.jump.model.ConfirmationToken;
 import com.cognixia.jump.model.Favorites;
 import com.cognixia.jump.model.Recipe;
 import com.cognixia.jump.model.User;
@@ -45,6 +49,9 @@ public class UserController {
 	
 	@Autowired
 	JwtUtil jwtUtil;
+	
+	@Autowired
+	ConfirmationTokenController tokenController;
 	
 	@Operation(summary = "Get all the users in the users table",
 			description = "Gets all the users from the users table in the yummgy_db database."
@@ -94,18 +101,12 @@ public class UserController {
 	}
 	
 
-	@Operation(summary = "Add a user to the users table",
-			description = "Adds a user to the user table in the database based off a username and password."
-					+ "The password is encrypted before it is stored to ensure that passwords are secure.")
-	@ApiResponses( value = {
-			@ApiResponse(responseCode="201",
-			description="User has been created"),
-			@ApiResponse(responseCode="400",
-			description="User data not formatted properly")}
-	)
 	@CrossOrigin
-	@PostMapping("/add/user")
-	public ResponseEntity<?> addUser(@Valid @RequestBody User newUser) {
+	public String addUser(@Valid User newUser) throws AlreadyInUseException {
+		String email = newUser.getEmail();
+		boolean emailUsed = repo.findByEmail(email).isPresent();
+		
+		
 		
 		newUser.setUserId(null);
 		
@@ -113,7 +114,7 @@ public class UserController {
 		
 		newUser.setRole(Role.ROLE_USER);
 		
-		newUser.setEnabled(true);
+		newUser.setEnabled(false);
 		
 		newUser.setLocked(false);
 		
@@ -121,9 +122,40 @@ public class UserController {
 		
 		newUser.setExpired(false);
 		
-		User added = repo.save(newUser); 
+		if(emailUsed) {
+			if(!repo.findByEmail(email).get().isEnabled())
+			{
+				
+				String token = UUID.randomUUID().toString();
+				
+				ConfirmationToken confirmationToken = new ConfirmationToken(token, LocalDateTime.now(), LocalDateTime.now().plusMinutes(15), repo.findByEmail(email).get());
+				
+				tokenController.saveConfirmationToken(confirmationToken);
+				
+				return token;
+			}
+			else
+			{
+				throw new AlreadyInUseException("Email", email);
+			}
+		}
 		
-		return ResponseEntity.status(201).body(added);
+		boolean usernameUsed = repo.findByYumUsername(newUser.getYumUsername()).isPresent();
+		
+		if(usernameUsed)
+		{
+			throw new AlreadyInUseException("Username", newUser.getYumUsername());
+		}
+		
+		User added = repo.save(newUser);
+		
+		String token = UUID.randomUUID().toString();
+		
+		ConfirmationToken confirmationToken = new ConfirmationToken(token, LocalDateTime.now(), LocalDateTime.now().plusMinutes(15), added);
+		
+		tokenController.saveConfirmationToken(confirmationToken);
+		
+		return token;
 	}
 	
 	@Operation(summary = "Add an admin user to the users table",
@@ -147,7 +179,7 @@ public class UserController {
 		
 		User added = repo.save(newUser);
 		
-		newUser.setRole(Role.ROLE_ADMIN);
+		newUser.setRole(Role.ROLE_USER);
 		
 		newUser.setEnabled(true);
 		
@@ -370,6 +402,29 @@ public class UserController {
             return ResponseEntity.status(200).body(user.isCredentialsBad());
         } else {
         	throw new ResourceNotFoundException("User", userId);
+        }
+	}
+	
+	@Operation(summary = "Toggle the enabled value of a user",
+			description = "Swaps the current enabled value of a user by id if the request is done by an admin.")
+	@ApiResponses({
+			@ApiResponse(responseCode="200",
+			description="Enabled has been swapped"),
+			@ApiResponse(responseCode="400",
+			description="User does not exist")}
+	)
+	
+	@CrossOrigin
+	public ResponseEntity<?> setEnabled(String email) throws ResourceNotFoundException {
+		Optional<User> userOptional = repo.findByEmail(email);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            user.setEnabled(true);
+            user = repo.save(user);
+            return ResponseEntity.status(200).body(user.isEnabled());
+        } else {
+        	throw new ResourceNotFoundException("Email");
         }
 	}
 	

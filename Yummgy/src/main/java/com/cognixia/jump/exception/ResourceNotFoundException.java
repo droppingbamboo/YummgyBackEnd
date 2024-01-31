@@ -9,10 +9,10 @@ public class ResourceNotFoundException extends Exception {
 	}
 	
 	public ResourceNotFoundException(String resource) {
-		System.out.println(resource + " could not be found");
+		super(resource + " could not be found");
 	}
 	
 	public ResourceNotFoundException(String resource, String field, String value) {
-		System.out.println(resource + " with " + field + " = " + value + " was not found");
+		super(resource + " with " + field + " = " + value + " was not found");
 	}
 }
