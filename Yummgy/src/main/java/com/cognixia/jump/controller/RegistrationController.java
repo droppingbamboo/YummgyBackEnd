@@ -45,23 +45,22 @@ public class RegistrationController {
 	@Autowired
 	private EmailService emailSender;
 	
-	@Autowired
-	private UserRepository userRepo;
 	
 	
-	
-	@Operation(summary = "Add a user to the users table",
+	@Operation(summary = "Registers a user and sends an email out to the user to confirm registration.",
 			description = "Adds a user to the user table in the database based off a username and password."
-					+ "The password is encrypted before it is stored to ensure that passwords are secure.")
+					+ "The password is encrypted before it is stored to ensure that passwords are secure."
+					+ " The user is stored in the database with enabled set to false and the USER role."
+					+ " Once they verify by clicking on the email link.")
 	@ApiResponses( value = {
 			@ApiResponse(responseCode="201",
 			description="User has been created"),
 			@ApiResponse(responseCode="400",
-			description="User data not formatted properly")}
+			description="User data or email not formatted properly, or user already enabled")}
 	)
 	@CrossOrigin
 	@PostMapping("/register/user")
-	public String register(@RequestBody RegistrationRequest request) throws AlreadyInUseException, InvalidResourceFormatException {
+	public ResponseEntity<?> register(@RequestBody RegistrationRequest request) throws AlreadyInUseException, InvalidResourceFormatException {
         boolean isValidEmail = emailValidator.
                 testEmail(request.getEmail());
 
@@ -85,13 +84,25 @@ public class RegistrationController {
                 request.getEmail(),
                 buildEmail(request.getYumUsername(), link));
 
-        return token;
+        return ResponseEntity.status(201).body(token);
     }
 	
+	
+	@Operation(summary = "Sets a user to enabled in the database based off the provided token.",
+			description = "Updates a user's enabled value to true in the database, this is based off the provided"
+					+ " token and if its matches a token thjat exists within the database.")
+	@ApiResponses( value = {
+			@ApiResponse(responseCode="200",
+			description="User has been enabled"),
+			@ApiResponse(responseCode="400",
+			description="Token is already in use or token is expired"),
+			@ApiResponse(responseCode="404",
+			description="Token specified was not found")}
+	)
 	@CrossOrigin
 	@Transactional
 	@PatchMapping("/registration/confirm")
-    public void confirmToken(@RequestParam String token) throws ResourceNotFoundException, AlreadyInUseException, TokenExpiredException {
+    public ResponseEntity<?> confirmToken(@RequestParam String token) throws ResourceNotFoundException, AlreadyInUseException, TokenExpiredException {
         ConfirmationToken confirmationToken = confirmationTokenController.getToken(token)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("token"));
@@ -108,7 +119,7 @@ public class RegistrationController {
 
         confirmationTokenController.setConfirmedAt(token);
         userController.setEnabled(confirmationToken.getUser().getEmail());
-        return;
+        return ResponseEntity.status(200).body("User has been enabled");
     }
 	
 	
