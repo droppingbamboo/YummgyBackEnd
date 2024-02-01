@@ -93,8 +93,10 @@ public class RegistrationControllerTest {
 		when(userController.addUser(any(User.class))).thenReturn("token123");
 
 		// Perform the POST request
-		mvc.perform(post(uri).contentType(MediaType.APPLICATION_JSON).content(asJsonString(registrationRequest)))
-				.andExpect(status().isOk()).andExpect(content().string("token123"));
+		mvc.perform(post(uri).contentType(MediaType.APPLICATION_JSON).
+				content(asJsonString(registrationRequest)))
+				.andExpect(status()
+						.isCreated()).andExpect(content().string("token123"));
 
 		// Verify interactions
 		verify(emailValidator, times(1)).testEmail("test@example.com");
